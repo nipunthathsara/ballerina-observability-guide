@@ -73,31 +73,22 @@ service<http:Service> airlineReservationService bind airlineEP {
             }
         }
 
-        json arrivalDate = reqPayload.ArrivalDate;
-        json departureDate = reqPayload.DepartureDate;
-        json fromPlace = reqPayload.From;
-        json toPlace = reqPayload.To;
+        string arrivalDate = <string> reqPayload.ArrivalDate but {error => ""};
+        string departureDate = <string> reqPayload.DepartureDate but {error => ""};
+        string rom = <string> reqPayload.From but {error => ""};
+        string to = <string> reqPayload.To but {error => ""};
+        string airline = "Qatar";
 
         // If payload parsing fails, send a "Bad Request" message as the response
-        if (arrivalDate == null || departureDate == null || fromPlace == null || toPlace == null) {
+        if (arrivalDate == null || departureDate == null || rom == null || to == null) {
             response.statusCode = 400;
             response.setJsonPayload({"Message":"Bad Request - Invalid Payload"});
             _ = caller -> respond(response);
             done;
         }
 
-        // Mock logic
-        // Details of the airline
-        json flightDetails = {
-            "Airline":"Qatar Airways",
-            "ArrivalDate":arrivalDate,
-            "ReturnDate":departureDate,
-            "From":fromPlace,
-            "To":toPlace,
-            "Price":278
-        };
         // Response payload
-        response.setJsonPayload(untaint flightDetails);
+        response.setJsonPayload(untaint airlineDBService(airline, departureDate, arrivalDate, to, rom));
         // Send the response to the caller
         _ = caller -> respond(response);
     }
@@ -122,31 +113,22 @@ service<http:Service> airlineReservationService bind airlineEP {
             }
         }
 
-        json arrivalDate = reqPayload.ArrivalDate;
-        json departureDate = reqPayload.DepartureDate;
-        json fromPlace = reqPayload.From;
-        json toPlace = reqPayload.To;
+        string arrivalDate = <string> reqPayload.ArrivalDate but {error => ""};
+        string departureDate = <string> reqPayload.DepartureDate but {error => ""};
+        string rom = <string> reqPayload.From but {error => ""};
+        string to = <string> reqPayload.To but {error => ""};
+        string airline = "Asiana";
 
         // If payload parsing fails, send a "Bad Request" message as the response
-        if (arrivalDate == null || arrivalDate == null || fromPlace == null || toPlace == null) {
+        if (arrivalDate == null || arrivalDate == null || rom == null || to == null) {
             response.statusCode = 400;
             response.setJsonPayload({"Message":"Bad Request - Invalid Payload"});
             _ = caller -> respond(response);
             done;
         }
 
-        // Mock logic
-        // Details of the airline
-        json flightDetails = {
-            "Airline":"Asiana",
-            "ArrivalDate":arrivalDate,
-            "ReturnDate":departureDate,
-            "From":fromPlace,
-            "To":toPlace,
-            "Price":275
-        };
         // Response payload
-        response.setJsonPayload(untaint flightDetails);
+        response.setJsonPayload(untaint airlineDBService(airline, departureDate, arrivalDate, to, rom));
         // Send the response to the caller
         _ = caller -> respond(response);
     }
@@ -196,7 +178,7 @@ service<http:Service> airlineReservationService bind airlineEP {
     //         "Price":273
     //     }; 
         // Response payload
-        response.setJsonPayload(untaint dbService(airline, departureDate, arrivalDate, to, rom));
+        response.setJsonPayload(untaint airlineDBService(airline, departureDate, arrivalDate, to, rom));
         // Send the response to the caller
         _ = caller -> respond(response);
     }
@@ -221,7 +203,7 @@ endpoint mysql:Client airLineDB{
     dbOptions: { useSSL: false }
 };
 
-function dbService (string airline, string departureDate, string arrivalDate, string to, string rom) returns (json){
+function airlineDBService (string airline, string departureDate, string arrivalDate, string to, string rom) returns (json){
     sql:Parameter p1 = {sqlType:sql:TYPE_VARCHAR, value:airline};
     sql:Parameter p2 = {sqlType:sql:TYPE_DATE, value:departureDate};
     sql:Parameter p3 = {sqlType:sql:TYPE_DATE, value:arrivalDate};
