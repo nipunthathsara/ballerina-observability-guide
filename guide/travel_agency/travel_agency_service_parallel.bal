@@ -164,7 +164,7 @@ service<http:Service> travelAgencyService bind travelAgencyEP {
             if (airlineResponses["qatarWorker"] != null) {
                 var resQatar = check <http:Response>(airlineResponses["qatarWorker"]);
                 jsonFlightResponseQatar = check resQatar.getJsonPayload();
-                match jsonFlightResponseQatar.Price {
+                match jsonFlightResponseQatar.price {
                     int intVal => qatarPrice = intVal;
                     any otherVals => qatarPrice = -1;
                 }
@@ -174,7 +174,7 @@ service<http:Service> travelAgencyService bind travelAgencyEP {
             if (airlineResponses["asianaWorker"] != null) {
                 var resAsiana = check <http:Response>(airlineResponses["asianaWorker"]);
                 jsonFlightResponseAsiana = check resAsiana.getJsonPayload();
-                match jsonFlightResponseAsiana.Price {
+                match jsonFlightResponseAsiana.price {
                     int intVal => asianaPrice = intVal;
                     any otherVals => asianaPrice = -1;
                 }
@@ -184,7 +184,7 @@ service<http:Service> travelAgencyService bind travelAgencyEP {
             if (airlineResponses["emiratesWorker"] != null) {
                 var resEmirates = check <http:Response>(airlineResponses["emiratesWorker"]);
                 jsonFlightResponseEmirates = check resEmirates.getJsonPayload();
-                match jsonFlightResponseEmirates.Price {
+                match jsonFlightResponseEmirates.price {
                     int intVal => emiratesPrice = intVal;
                     any otherVals => emiratesPrice = -1;
                 }

@@ -15,6 +15,8 @@
 // under the License.
 
 import ballerina/http;
+import ballerina/mysql;
+import ballerina/sql;
 //import ballerinax/docker;
 //import ballerinax/kubernetes;
 
@@ -71,9 +73,10 @@ service<http:Service> carRentalService bind carEP {
             }
         }
 
-        json arrivalDate = reqPayload.ArrivalDate;
-        json departureDate = reqPayload.DepartureDate;
-        json vehicleType = reqPayload.VehicleType;
+        string arrivalDate = <string> reqPayload.ArrivalDate but {error => ""};
+        string departureDate = <string> reqPayload.DepartureDate but {error => ""};
+        string vehicleType = <string> reqPayload.VehicleType but {error => ""};
+        string company = "DriveSG";
 
         // If payload parsing fails, send a "Bad Request" message as the response
         if (arrivalDate == null || departureDate == null || vehicleType == null) {
@@ -83,17 +86,8 @@ service<http:Service> carRentalService bind carEP {
             done;
         }
 
-        // Mock logic
-        // Details of the vehicle
-        json vehicleDetails = {
-            "Company":"DriveSG",
-            "VehicleType":vehicleType,
-            "FromDate":arrivalDate,
-            "ToDate":departureDate,
-            "PricePerDay":5
-        };
         // Response payload
-        response.setJsonPayload(untaint vehicleDetails);
+        response.setJsonPayload(untaint carDBService(company, departureDate, arrivalDate, vehicleType));
         // Send the response to the caller
         _ = caller -> respond(response);
     }
@@ -118,9 +112,10 @@ service<http:Service> carRentalService bind carEP {
             }
         }
 
-        json arrivalDate = reqPayload.ArrivalDate;
-        json departureDate = reqPayload.DepartureDate;
-        json vehicleType = reqPayload.VehicleType;
+        string arrivalDate = <string> reqPayload.ArrivalDate but {error => ""};
+        string departureDate = <string> reqPayload.DepartureDate but {error => ""};
+        string vehicleType = <string> reqPayload.VehicleType but {error => ""};
+        string company = "DreamCar";
 
         // If payload parsing fails, send a "Bad Request" message as the response
         if (arrivalDate == null || departureDate == null || vehicleType == null) {
@@ -130,17 +125,8 @@ service<http:Service> carRentalService bind carEP {
             done;
         }
 
-        // Mock logic
-        // Details of the vehicle
-        json vehicleDetails = {
-            "Company":"DreamCar",
-            "VehicleType":vehicleType,
-            "FromDate":arrivalDate,
-            "ToDate":departureDate,
-            "PricePerDay":6
-        };
         // Response payload
-        response.setJsonPayload(untaint vehicleDetails);
+        response.setJsonPayload(untaint carDBService(company, departureDate, arrivalDate, vehicleType));
         // Send the response to the caller
         _ = caller -> respond(response);
     }
@@ -165,9 +151,10 @@ service<http:Service> carRentalService bind carEP {
             }
         }
 
-        json arrivalDate = reqPayload.ArrivalDate;
-        json departureDate = reqPayload.DepartureDate;
-        json vehicleType = reqPayload.VehicleType;
+        string arrivalDate = <string> reqPayload.ArrivalDate but {error => ""};
+        string departureDate = <string> reqPayload.DepartureDate but {error => ""};
+        string vehicleType = <string> reqPayload.VehicleType but {error => ""};
+        string company = "Sixt";
 
         // If payload parsing fails, send a "Bad Request" message as the response
         if (arrivalDate == null || departureDate == null || vehicleType == null) {
@@ -177,18 +164,45 @@ service<http:Service> carRentalService bind carEP {
             done;
         }
 
-        // Mock logic
-        // Details of the vehicle
-        json vehicleDetails = {
-            "Company":"Sixt",
-            "VehicleType":vehicleType,
-            "FromDate":arrivalDate,
-            "ToDate":departureDate,
-            "PricePerDay":7
-        };
         // Response payload
-        response.setJsonPayload(untaint vehicleDetails);
+        response.setJsonPayload(untaint carDBService(company, departureDate, arrivalDate, vehicleType));
         // Send the response to the caller
         _ = caller -> respond(response);
     }
+}
+
+type Car record {
+    string company;
+    string arrivalDate;
+    string departureDate;
+    string vehicleType;
+    int price;
+};
+
+endpoint mysql:Client carDB{
+    host:"localhost",
+    port:3306,
+    name:"testdb2",
+    username:"root",
+    password:"root",
+    dbOptions: { useSSL: false }
+};
+
+function carDBService (string company, string departureDate, string arrivalDate, string vehicleType) returns (json){
+    sql:Parameter p1 = {sqlType:sql:TYPE_VARCHAR, value:company};
+    sql:Parameter p2 = {sqlType:sql:TYPE_DATE, value:departureDate};
+    sql:Parameter p3 = {sqlType:sql:TYPE_DATE, value:arrivalDate};
+    sql:Parameter p4 = {sqlType:sql:TYPE_VARCHAR, value:vehicleType};
+    string q = "SELECT * FROM CARS WHERE company = ? AND departureDate = ? AND arrivalDate = ? AND vehicleType = ?";
+    var temp = carDB -> select(q, Car, p1, p2, p3, p4);
+    table<Car> cars = check temp;
+    Car car = {};
+    foreach i in cars {
+        car.company = i.company;
+        car.departureDate = i.departureDate;
+        car.arrivalDate = i.arrivalDate;
+        car.vehicleType = i.vehicleType;
+        car.price = i.price;
+    }
+    return <json> car but {error => {}};
 }
