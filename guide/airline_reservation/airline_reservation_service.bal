@@ -15,6 +15,8 @@
 // under the License.
 
 import ballerina/http;
+import ballerina/mysql;
+import ballerina/sql;
 //import ballerinax/docker;
 //import ballerinax/kubernetes;
 
@@ -169,13 +171,14 @@ service<http:Service> airlineReservationService bind airlineEP {
             }
         }
 
-        json arrivalDate = reqPayload.ArrivalDate;
-        json departureDate = reqPayload.DepartureDate;
-        json fromPlace = reqPayload.From;
-        json toPlace = reqPayload.To;
+        string arrivalDate = <string> reqPayload.ArrivalDate but {error => ""};
+        string departureDate = <string> reqPayload.DepartureDate but {error => ""};
+        string rom = <string> reqPayload.From but {error => ""};
+        string to = <string> reqPayload.To but {error => ""};
+        string airline = "Emirates";
 
         // If payload parsing fails, send a "Bad Request" message as the response
-        if (arrivalDate == null || departureDate == null || fromPlace == null || toPlace == null) {
+        if (arrivalDate == null || departureDate == null || rom == null || to == null) {
             response.statusCode = 400;
             response.setJsonPayload({"Message":"Bad Request - Invalid Payload"});
             _ = caller -> respond(response);
@@ -184,17 +187,58 @@ service<http:Service> airlineReservationService bind airlineEP {
 
         // Mock logic
         // Details of the airline
-        json flightDetails = {
-            "Airline":"Emirates",
-            "ArrivalDate":arrivalDate,
-            "ReturnDate":departureDate,
-            "From":fromPlace,
-            "To":toPlace,
-            "Price":273
-        };
+    //    json flightDetails = {
+    //         "Airline":"Emirates",
+    //         "ArrivalDate":arrivalDate,
+    //         "ReturnDate":departureDate,
+    //         "From":fromPlace,
+    //         "To":toPlace,
+    //         "Price":273
+    //     }; 
         // Response payload
-        response.setJsonPayload(untaint flightDetails);
+        response.setJsonPayload(untaint dbService(airline, departureDate, arrivalDate, to, rom));
         // Send the response to the caller
         _ = caller -> respond(response);
     }
+}
+
+type Flight record {
+    int flightNo;
+    string airline;
+    string arrivalDate;
+    string departureDate;
+    string to;
+    string rom;
+    int price;
+};
+
+endpoint mysql:Client airLineDB{
+    host:"localhost",
+    port:3306,
+    name:"testdb2",
+    username:"root",
+    password:"root",
+    dbOptions: { useSSL: false }
+};
+
+function dbService (string airline, string departureDate, string arrivalDate, string to, string rom) returns (json){
+    sql:Parameter p1 = {sqlType:sql:TYPE_VARCHAR, value:airline};
+    sql:Parameter p2 = {sqlType:sql:TYPE_DATE, value:departureDate};
+    sql:Parameter p3 = {sqlType:sql:TYPE_DATE, value:arrivalDate};
+    sql:Parameter p4 = {sqlType:sql:TYPE_VARCHAR, value:to};
+    sql:Parameter p5 = {sqlType:sql:TYPE_VARCHAR, value:rom};
+    string q = "SELECT * FROM FLIGHTS WHERE airline = ? AND departureDate = ? AND arrivalDate = ? AND dest = ? AND rom = ?";
+    var temp = airLineDB -> select(q, Flight, p1, p2, p3, p4, p5);
+    table<Flight> flights = check temp;
+    Flight flight = {};
+    foreach i in flights {
+        flight.flightNo = i.flightNo;
+        flight.airline = i.airline;
+        flight.departureDate = i.departureDate;
+        flight.arrivalDate = i.arrivalDate;
+        flight.to = i.to;
+        flight.rom = i.rom;
+        flight.price = i.price;
+    }
+    return <json> flight but {error => {}};
 }
