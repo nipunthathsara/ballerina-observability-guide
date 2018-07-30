@@ -465,6 +465,8 @@ To see the complete implementation of the above file, refer to the [travel_agenc
    '{"ArrivalDate":"12-03-2018", "DepartureDate":"13-04-2018", "From":"Colombo",
    "To":"Changi", "VehicleType":"Car", "Location":"Changi"}' \
    "http://ballerina.guides.io/travel/arrangeTour" -H "Content-Type:application/json" 
+
+   curl -v -X POST -d '{"ArrivalDate":"2007-11-06", "DepartureDate":"2007-11-06", "From":"CMB", "To":"DXB", "VehicleType":"Car", "Location":"Changi"}' "http://localhost:9090/travel/arrangeTour" -H "Content-Type:application/json" 
 ```
 
 - Travel agency service will send a response similar to the following:

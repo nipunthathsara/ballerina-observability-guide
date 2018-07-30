@@ -15,6 +15,8 @@
 // under the License.
 
 import ballerina/http;
+import ballerina/observe;
+import ballerina/log;
 //import ballerinax/docker;
 //import ballerinax/kubernetes;
 
@@ -72,6 +74,9 @@ service<http:Service> travelAgencyService bind travelAgencyEP {
         http:Response outResponse;
         json inReqPayload;
 
+        string resourcePath = "/travel/arrangeTour";
+        log:printTrace("Received at : " + resourcePath);
+        log:printDebug("Payload at : " + resourcePath + " : ");
         // Try parsing the JSON payload from the request
         match inRequest.getJsonPayload() {
             // Valid JSON payload
@@ -81,6 +86,7 @@ service<http:Service> travelAgencyService bind travelAgencyEP {
                 outResponse.statusCode = 400;
                 outResponse.setJsonPayload({"Message":"Invalid payload - Not a valid JSON payload"});
                 _ = client -> respond(outResponse);
+                log:printWarn("Invalid payload at : " + resourcePath + " : ");
                 done;
             }
         }
@@ -98,6 +104,7 @@ service<http:Service> travelAgencyService bind travelAgencyEP {
             outResponse.statusCode = 400;
             outResponse.setJsonPayload({"Message":"Bad Request - Invalid Payload"});
             _ = client -> respond(outResponse);
+            log:printWarn("Invalid payload at : " + resourcePath + " : ");
             done;
         }
 
