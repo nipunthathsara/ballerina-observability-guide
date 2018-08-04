@@ -45,31 +45,50 @@ Travel agency service initiates the service chain. It communicates with other se
 
 ## Testing 
 
+### Setting up the environment
+
+Please refer to the [Prerequisites](#prerequisites) section for information on setting up the required tools and environment. Access the below URLs and make sure you have Prometheus, Grafana and Jaeger servers up and running.
+Prometheus - [http://localhost:19090](http://localhost:19090)
+Grafana - [http://localhost:3000](http://localhost:3000)
+Jaeger - [http://localhost:16686](http://localhost:16686)
+
+Create the database using the script provided in resources directory. This datbase is being used by the services to retrieve data.
+```sql
+mysql -u <username> -p
+```
+```sql
+source resources/mysql.sql;
+```
+
 ### Invoking the service
 
 - Navigate to `parallel-service-orchestration/guide` and run the following commands in separate terminals to start all four HTTP services. This will start the `Airline Reservation`, `Hotel Reservation`, `Car Rental` and `Travel Agency` services in ports 9091, 9092, 9093 and 9090 respectively.
 
-```bash 
-   $ ballerina run airline_reservation/
-```
-```bash
-   $ ballerina run hotel_reservation/
-```
-```bash
-   $ ballerina run car_rental/
-```
 ```bash
    $ ballerina run travel_agency/
 ```
-   
+```bash 
+   $ ballerina run airline_reservation/ -e b7a.observability.metrics.prometheus.port=9797
+```
+```bash
+   $ ballerina run hotel_reservation/ -e b7a.observability.metrics.prometheus.port=9798
+```
+```bash
+   $ ballerina run car_rental/ -e b7a.observability.metrics.prometheus.port=9799
+```
+Note that we are passing the prometheus port as a parameter for all the services, except the first one, travel_agency. Travel agency service will publish the metrics data on the port defined in the ballerina.conf file.
+```
+[b7a.observability.metrics.prometheus]
+port=9796
+```
+As the default port is already being occupied, we start the remaining three services with different ports to avoid conflicts.
+```
+-e b7a.observability.metrics.prometheus.port=979x
+```
+
 - Invoke the travel agency service by sending a POST request to arrange a tour.
 
 ```bash
-   curl -v -X POST -d \
-   '{"ArrivalDate":"12-03-2018", "DepartureDate":"13-04-2018", "From":"Colombo",
-   "To":"Changi", "VehicleType":"Car", "Location":"Changi"}' \
-   "http://ballerina.guides.io/travel/arrangeTour" -H "Content-Type:application/json" 
-
    curl -v -X POST -d '{"ArrivalDate":"2007-11-06", "DepartureDate":"2007-11-06", "From":"CMB", "To":"DXB", "VehicleType":"Car", "Location":"Changi"}' "http://localhost:9090/travel/arrangeTour" -H "Content-Type:application/json" 
 ```
 
@@ -77,20 +96,17 @@ Travel agency service initiates the service chain. It communicates with other se
     
 ```bash
    HTTP/1.1 200 OK
-    
-   {
-     "Flight":
-     {"Airline":"Emirates","ArrivalDate":"12-03-2018","ReturnDate":"13-04-2018",
-     "From":"Colombo","To":"Changi","Price":273},
-     
-     "Hotel":
-     {"HotelName":"Elizabeth","FromDate":"12-03-2018","ToDate":"13-04-2018",
-     "DistanceToLocation":2},
-     
-     "Vehicle":
-     {"Company":"DriveSG","VehicleType":"Car","FromDate":"12-03-2018",
-     "ToDate":"13-04-2018","PricePerDay":5}
-   }
+    {
+        "Flight":{
+            "flightNo":1,"airline":"Emirates","arrivalDate":"2007-11-06+05:30","departureDate":"2007-11-06+05:30","to":"DXB","rom":"CMB","price":100
+        },
+        "Hotel":{
+            "HotelName":"Elizabeth","FromDate":"2007-11-06","ToDate":"2007-11-06","DistanceToLocation":2
+        },
+        "Vehicle":{
+            "company":"Sixt","arrivalDate":"2007-11-06+05:30","departureDate":"2007-11-06+05:30","vehicleType":"Car","price":30
+        }
+    }
 ```    
    
 ### Writing unit tests 
