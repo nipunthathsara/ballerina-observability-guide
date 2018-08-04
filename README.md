@@ -323,6 +323,11 @@ enabled=true
 # Jaeger Host and Port, to which the tracing information will be pushed by Ballerina
 reporter.hostname="localhost"
 reporter.port=5775
+sampler.param=1.0
+sampler.type="const"
+reporter.flush.interval.ms=2000
+reporter.log.spans=true
+reporter.max.buffer.spans=1000
 ```
 
 - Run Jaeger docker image using the following command. (If you haven't already started Jaeger as instructed in the [prerequisites](#prerequisites) section)
@@ -373,12 +378,12 @@ Follow the below steps to set up Prometheus and view metrics Ballerina services.
     - job_name: 'prometheus'
    
    static_configs:
-        - targets: ['172.17.0.1:9797']
+        - targets: ['127.0.0.1:9796', '127.0.0.1:9797', '127.0.0.1:9798', '127.0.0.1:9799']
 ```
 
-   NOTE : Replace `172.17.0.1` if your local docker IP differs from `172.17.0.1`
+   NOTE : Replace `127.0.0.1` with your local Docker IP, if you are deplyoing the services in Docker. We've added multiple targets with differnt ports as we are publishing data from 4 different services and want Prometheus to capture them all.
    
-- Run the Prometheus docker image using the following command
+- Run the Prometheus docker image using the following command (If you haven't already started Prometheus as instructed in the [prerequisites](#prerequisites) section. ake sure you've re-confugred `prometheus.yml` to suite this sample)
 ```
    docker run -p 19090:9090 -v /tmp/prometheus.yml:/etc/tmp/prometheus.yml prom/prometheus
 ```
@@ -387,9 +392,6 @@ Follow the below steps to set up Prometheus and view metrics Ballerina services.
 ```
    $ ballerina run --config travel_agency/ballerina.conf <package_name>
 ```
-
-   NOTE: First start the `travel_agency` package since it's the main orchestrator for other services(also we are going
-    to trace from traval agency service hence do not use the config file for other services)
    
 - You can access Prometheus at the following URL
 ```
@@ -501,3 +503,44 @@ NOTE: You may need to add `store` index pattern to kibana visualization tool to 
  
      ![logging screenshot](images/logging-screenshot.png "Kibana UI")
      
+## Usage of Observalbility
+
+All four Ballerina services push tracing data to Jaeger on port `5775`. Send one request to the travel agency service and check the Jaeger results.
+```bash
+    curl -v -X POST -d '{"ArrivalDate":"2007-11-06", "DepartureDate":"2007-11-06", "From":"CMB", "To":"DXB", "VehicleType":"Car", "Location":"Changi"}' "http://localhost:9090/travel/arrangeTour" -H "Content-Type:application/json" 
+```
+Access the jaeger UI `http://localhost:16686`
+
+Select `travel_agency:0.0.0.travelAgencyService` service from the services list.
+
+Select `arrangeTour` operation from operations list and then click Find traces.
+
+![Jaeger](images/Jaeger-first-window.png "Jaeger initial window")
+
+- Duration against Time graph shows total time taken by each request to respond. You can identify a delay in service at a given time by this.
+- Request count to the selected service and operation is the number of traces.
+- Can filter results further by, Min Duration, Max Duration, Tags. If you want to identify if a service has taken any longer than 500ms to respond, or number of requests that has been succeeded (`http.status_code=200`), can use these filters.
+
+Expand a trace.
+![Expanded trace](images/expanded-trace.png "Expanded jaeger trace")
+- Each service is represented with a unique colour.
+- Parallel network calls to car renta, hotel reservation and air line services can clearly be identified by the top graph.
+
+### Identifying the bottleneck
+If the request has taken longer time to respond, we can identify the bottleneck by using the details in the graph. To demonstrate this, let's uncomment the below line in `airline_reservation_service.bal` file and restart the service. Send the request again and observe the delay on response due to added delay on airlineDBservice. (Make sure to revert the changes afterward)
+
+`runtime:sleep(1000);`
+
+Normal service call :
+
+![Normal](images/normal-trace-cropped.png "Jaeger initial window")
+
+Delayed service call : 
+
+![Delayed](images/delay-trace-cropped.png "Jaeger initial window")
+
+Green lines belong to the `airline_reservation_service`. It can be seen from the comparison that this service is the culprit for the delay. Expanding the relavent span will show more information like duration taken. This method can be used to identify the bottleneck webservice or database call.
+ ### 
+
+
+
