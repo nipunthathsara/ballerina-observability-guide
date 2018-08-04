@@ -17,6 +17,7 @@
 import ballerina/http;
 import ballerina/mysql;
 import ballerina/sql;
+import ballerina/runtime;
 //import ballerinax/docker;
 //import ballerinax/kubernetes;
 
@@ -210,6 +211,8 @@ function airlineDBService (string airline, string departureDate, string arrivalD
     sql:Parameter p4 = {sqlType:sql:TYPE_VARCHAR, value:to};
     sql:Parameter p5 = {sqlType:sql:TYPE_VARCHAR, value:rom};
     string q = "SELECT * FROM FLIGHTS WHERE airline = ? AND departureDate = ? AND arrivalDate = ? AND dest = ? AND rom = ?";
+    //Uncomment this line and restart the service  to delay the service by 3 seconds
+    runtime:sleep(1000);
     var temp = airLineDB -> select(q, Flight, p1, p2, p3, p4, p5);
     table<Flight> flights = check temp;
     Flight flight = {};
