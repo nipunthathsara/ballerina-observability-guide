@@ -343,7 +343,8 @@ service<http:Service> travelAgencyService bind travelAgencyEP {
             if (vehicleResponses["driveSg"] != null) {
                 var responseDriveSg = check <http:Response>(vehicleResponses["driveSg"]);
                 jsonVehicleResponse = check responseDriveSg.getJsonPayload();
-            } else if (vehicleResponses["dreamCar"] != null) {
+            } 
+            else if (vehicleResponses["dreamCar"] != null) {
                 // Get the response from company 'DreamCar' if not null
                 var responseDreamCar = check <http:Response>(vehicleResponses["dreamCar"]);
                 jsonVehicleResponse = check responseDreamCar.getJsonPayload();

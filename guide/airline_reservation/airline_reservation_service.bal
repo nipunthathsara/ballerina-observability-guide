@@ -195,16 +195,16 @@ type Flight record {
     int price;
 };
 
-endpoint mysql:Client airLineDB{
+function airlineDBService (string airline, string departureDate, string arrivalDate, string to, string rom) returns (json){
+    endpoint mysql:Client airLineDB{
     host:"localhost",
     port:3306,
     name:"testdb2",
     username:"root",
     password:"root",
     dbOptions: { useSSL: false }
-};
-
-function airlineDBService (string airline, string departureDate, string arrivalDate, string to, string rom) returns (json){
+    };
+    
     sql:Parameter p1 = {sqlType:sql:TYPE_VARCHAR, value:airline};
     sql:Parameter p2 = {sqlType:sql:TYPE_DATE, value:departureDate};
     sql:Parameter p3 = {sqlType:sql:TYPE_DATE, value:arrivalDate};
@@ -212,7 +212,7 @@ function airlineDBService (string airline, string departureDate, string arrivalD
     sql:Parameter p5 = {sqlType:sql:TYPE_VARCHAR, value:rom};
     string q = "SELECT * FROM FLIGHTS WHERE airline = ? AND departureDate = ? AND arrivalDate = ? AND dest = ? AND rom = ?";
     //Uncomment this line and restart the service  to delay the service by 3 seconds
-    runtime:sleep(1000);
+    // runtime:sleep(1000);
     var temp = airLineDB -> select(q, Flight, p1, p2, p3, p4, p5);
     table<Flight> flights = check temp;
     Flight flight = {};

@@ -521,7 +521,8 @@ Select `arrangeTour` operation from operations list and then click Find traces.
 - Request count to the selected service and operation is the number of traces.
 - Can filter results further by, Min Duration, Max Duration, Tags. If you want to identify if a service has taken any longer than 500ms to respond, or number of requests that has been succeeded (`http.status_code=200`), can use these filters.
 
-Expand a trace.
+Expand a trace : 
+
 ![Expanded trace](images/expanded-trace.png "Expanded jaeger trace")
 - Each service is represented with a unique colour.
 - Parallel network calls to car renta, hotel reservation and air line services can clearly be identified by the top graph.
@@ -533,14 +534,45 @@ If the request has taken longer time to respond, we can identify the bottleneck 
 
 Normal service call :
 
-![Normal](images/normal-trace-cropped.png "Jaeger initial window")
+![Normal](images/normal-trace-cropped.png "Normal service call")
 
 Delayed service call : 
 
-![Delayed](images/delay-trace-cropped.png "Jaeger initial window")
+![Delayed](images/delay-trace-cropped.png "Delayed service call")
 
 Green lines belong to the `airline_reservation_service`. It can be seen from the comparison that this service is the culprit for the delay. Expanding the relavent span will show more information like duration taken. This method can be used to identify the bottleneck webservice or database call.
- ### 
+
+ ### Identifying the unavailble service
+In a service chaining scenario, one  or more Ballerina services may be unavailable at a time. Jaeger traces can be used to identify these services. In order to demonstrate this, let's shutdown the `car_rental_service.bal` service and send another request.
+
+Response
+```bash
+< HTTP/1.1 500 Internal Server Error
+< content-type: text/plain
+< content-length: 11
+< server: ballerina/0.980.0
+< date: Sun, 5 Aug 2018 00:25:25 +0530
+< 
+* Connection #0 to host localhost left intact
+call failed
+```
+Jaeger traces
+
+![Unavaialbel](images/service-unavailable-trace.png "Service unavaiable")
+
+If we expand this errornous trace, and expand its Spans too, we can identify the unavailable service as below. Observe the `http.url` property with the value of `/car/driveSeg`. Here the `travel_agency_service` is trying to call the `car_rental_service` and it's returning `http.status.code` of 502. Therefore, errornous service is `car_rental_service`.
+
+![Unavaialbel-expanded](images/unavaialble-service-expanded-trace.png "Service unavaiable-trace expanded")
+
+### Determining database call duration and bottleneck queries
+Jaeger traces includes spans for database operations. Below is the SELECT query which is being executed inside the `airline_reservation_service`.
+
+![DB-call-duration](images/DB-call-duration.png "Database call duration")
+
+This span includes the information of what the query is, duration of database call, etc. Note that this duration is not the query execution time on databse server, rather the combination of query execution time and network delay.
+
+However, this information is useful to isolate if a particular query is taking too long, whereas other queries to the same database server are performing comparatively good.
+
 
 
 
