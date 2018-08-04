@@ -10,7 +10,7 @@ Following are the sections available in this guide.
 
 - [Introduction](#Introduction)
 - [Prerequisites](#prerequisites)
-- [Testing](#testing)
+- [Testing the services](#Testing_the_services)
 - [Deployment](#deployment)
 - [Observability](#observability)
 
@@ -18,7 +18,8 @@ Following are the sections available in this guide.
 
 Consider a real-world use case of a travel agency that arranges complete tours for users. A tour package includes airline ticket reservation, hotel room reservation and car rental. Therefore, the travel agency service requires communicating with other necessary back-ends. Those back-ends query their databases to retrieve information of availability of their services.
 
-Travel Agency service communicates with multiple services. All three external services (airline reservation, hotel reservation and car rental) contain multiple resources. The travel agency service checks these resources in parallel to select the best-suited resource for each requirement. Each associated service then queries their database for the availability and information of their services. For example, the travel agency service checks three different airways in parallel and selects the airway with the lowest cost. Similarly, it checks several hotels in parallel and selects the closest one to the client's preferred location. The following diagram illustrates this use case.
+Travel Agency service communicates with multiple services. All three external services (airline reservation, hotel reservation and car rental) contain multiple resources. The travel agency service checks these resources in parallel to select the best-suited resource for each requirement. Each associated service then queries their database for the availability and information of their services. For example, the travel agency service checks three different airways in parallel and selects the airway with the lowest cost. Similarly, it checks several hotels in parallel and selects the closest one to the client's preferred location. 
+Travel agency service initiates the service chain. It communicates with other services and they query their databases to retrieve data. The following diagram illustrates this use case.
 
 ![alt text](/images/parallel-service-orchestration.svg)
 
@@ -28,7 +29,7 @@ In the above image,
 
 (3)      - Checks all three resources in parallel and get only the first response
 
-Travel agency service initiates the service chain. It communicates with other services and they query their databases to retrieve data. This sample service orchestration can be used to demonstrate a real life use-case of troubleshooting/analyzing web services and database connections with ballerina.
+We can use Ballerina's Tracing and Logging functionalities to check how to identify the problematic services. This sample service orchestration can be used to demonstrate a real life use-case of troubleshooting/analyzing web services and database connections with ballerina.
 
 ## Prerequisites
  
@@ -43,14 +44,14 @@ Travel agency service initiates the service chain. It communicates with other se
 - Ballerina IDE plugins ([IntelliJ IDEA](https://plugins.jetbrains.com/plugin/9520-ballerina), [VSCode](https://marketplace.visualstudio.com/items?itemName=WSO2.Ballerina), [Atom](https://atom.io/packages/language-ballerina))
 - [Kubernetes](https://kubernetes.io/docs/setup/)
 
-## Testing 
+## Testing the services
 
 ### Setting up the environment
 
 Please refer to the [Prerequisites](#prerequisites) section for information on setting up the required tools and environment. Access the below URLs and make sure you have Prometheus, Grafana and Jaeger servers up and running.
-Prometheus - [http://localhost:19090](http://localhost:19090)
-Grafana - [http://localhost:3000](http://localhost:3000)
-Jaeger - [http://localhost:16686](http://localhost:16686)
+- Prometheus - [http://localhost:19090](http://localhost:19090)
+- Grafana - [http://localhost:3000](http://localhost:3000)
+- Jaeger - [http://localhost:16686](http://localhost:16686)
 
 Create the database using the script provided in resources directory. This datbase is being used by the services to retrieve data.
 ```sql
@@ -107,30 +108,11 @@ As the default port is already being occupied, we start the remaining three serv
             "company":"Sixt","arrivalDate":"2007-11-06+05:30","departureDate":"2007-11-06+05:30","vehicleType":"Car","price":30
         }
     }
-```    
-   
-### Writing unit tests 
-
-In Ballerina, the unit test cases should be in the same package inside a folder named as 'tests'.  When writing the test functions the below convention should be followed.
-- Test functions should be annotated with `@test:Config`. See the below example.
-```ballerina
-   @test:Config
-   function testTravelAgencyService () {
 ```
-  
-This guide contains unit test cases for each service implemented above. 
-
-To run the tests, open your terminal and navigate to `parallel-service-orchestration/guide`, and run the following command.
-```bash
-   $ ballerina test
-```
-
-To check the implementations of these test files, refer to the [airline_reservation_service_test.bal](https://github.com/ballerina-guides/parallel-service-orchestration/blob/master/guide/airline_reservation/tests/airline_reservation_service_test.bal), [hotel_reservation_service_test.bal](https://github.com/ballerina-guides/parallel-service-orchestration/blob/master/guide/hotel_reservation/tests/hotel_reservation_service_test.bal), [car_rental_service_test.bal](https://github.com/ballerina-guides/parallel-service-orchestration/blob/master/guide/car_rental/tests/car_rental_service_test.bal), and [travel_agency_service_parallel_test.bal](https://github.com/ballerina-guides/parallel-service-orchestration/blob/master/guide/tests/travel_agency_service_parallel_test.bal).
-
 
 ## Deployment
 
-Once you are done with the development, you can deploy the services using any of the methods listed below. 
+You can deploy the services using any of the methods listed below. 
 
 ### Deploying locally
 
@@ -310,31 +292,40 @@ Access the service
 
 
 ## Observability 
-Ballerina is by default observable. Meaning you can easily observe your services, resources, etc.
-However, observability is disabled by default via configuration. Observability can be enabled by adding following configurations to `ballerina.conf` file and starting the ballerina service using it. A sample configuration file can be found in `parallel-service-orchestration/guide/travel_agency`.
+Ballerina is by default observable. Meaning you can easily observe your services, resources, etc. Observability configurations are defined in the `ballerina.conf` file. A sample configuration file can be found in `parallel-service-orchestration/guide/` directory.
 
 ```ballerina
 [b7a.observability]
 
-[b7a.observability.metrics]
-# Flag to enable Metrics
-enabled=true
+...
 
-[b7a.observability.tracing]
-# Flag to enable Tracing
-enabled=true
+[b7a.log]
+# Log level for the services defined
+level="DEBUG"
 ```
 
 To start the ballerina service using the configuration file, run the following command
-
 ```
    $ ballerina run --config travel_agency/ballerina.conf <package_name>
 ```
+When you execute the ```ballerina run``` command from the ```parallel-service-orchestration/guide/``` directory, the configuration file will be affected to every service that you are starting. Therefore, you don't need to pass the ```--config``` argument explicitly.
 
 ### Tracing 
 You can monitor ballerina services using in built tracing capabilities of Ballerina. We'll use [Jaeger](https://github.com/jaegertracing/jaeger) as the distributed tracing system.
 Follow the following steps to use tracing with Ballerina.
-- Run Jaeger docker image using the following command
+- Add below configurations to the ```ballerina.conf``` file
+```
+[b7a.observability.tracing]
+# Flag to enable Tracing
+enabled=true
+
+[b7a.observability.tracing.jaeger]
+# Jaeger Host and Port, to which the tracing information will be pushed by Ballerina
+reporter.hostname="localhost"
+reporter.port=5775
+```
+
+- Run Jaeger docker image using the following command. (If you haven't already started Jaeger as instructed in the [prerequisites](#prerequisites) section)
 ```bash
    $ docker run -d -p5775:5775/udp -p6831:6831/udp -p6832:6832/udp -p5778:5778 \
    -p16686:16686 p14268:14268 jaegertracing/all-in-one:latest
@@ -342,7 +333,7 @@ Follow the following steps to use tracing with Ballerina.
 
 - Navigate to `parallel-service-orchestration/guide/` and start all services using the following command
 ```
-   $ ballerina run --config travel_agency/ballerina.conf <package_name>
+   $ ballerina run --config ballerina.conf <package_name>
 ```
    
 - Observe the tracing using Jaeger UI using following URL
@@ -357,17 +348,19 @@ Follow the following steps to use tracing with Ballerina.
 
 ### Metrics
 Metrics and alerts are built-in with ballerina. We will use Prometheus as the monitoring tool.
-Follow the below steps to set up Prometheus and view metrics for travel_agency service.
+Follow the below steps to set up Prometheus and view metrics Ballerina services.
 
 - Set the below configurations in the `ballerina.conf` file in the project root.
 ```
-   [b7a.observability.metrics]
-   enabled=true
-   reporter="prometheus"
+    [b7a.observability.metrics]
+    # Flag to enable Metrics
+    enabled=true
 
-   [b7a.observability.metrics.prometheus]
-   port=9797
-   host="0.0.0.0"
+    [b7a.observability.metrics.prometheus]
+    # Port and Host, on which the metrics will be published to be consumed by Prometheus 
+    # http://localhost:9796/metrics This HTTP endpoint is hosted by Ballerina to publish the metrics data
+    port=9796
+    host="0.0.0.0"
 ```
 
 - Create a file `prometheus.yml` inside `/tmp/` location. Add the below configurations to the `prometheus.yml` file.
