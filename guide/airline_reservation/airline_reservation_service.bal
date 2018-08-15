@@ -167,17 +167,7 @@ service<http:Service> airlineReservationService bind airlineEP {
             _ = caller -> respond(response);
             done;
         }
-
-        // Mock logic
-        // Details of the airline
-    //    json flightDetails = {
-    //         "Airline":"Emirates",
-    //         "ArrivalDate":arrivalDate,
-    //         "ReturnDate":departureDate,
-    //         "From":fromPlace,
-    //         "To":toPlace,
-    //         "Price":273
-    //     }; 
+        
         // Response payload
         response.setJsonPayload(untaint airlineDBService(airline, departureDate, arrivalDate, to, rom));
         // Send the response to the caller
@@ -211,8 +201,8 @@ function airlineDBService (string airline, string departureDate, string arrivalD
     sql:Parameter p4 = {sqlType:sql:TYPE_VARCHAR, value:to};
     sql:Parameter p5 = {sqlType:sql:TYPE_VARCHAR, value:rom};
     string q = "SELECT * FROM FLIGHTS WHERE airline = ? AND departureDate = ? AND arrivalDate = ? AND dest = ? AND rom = ?";
-    //Uncomment this line and restart the service  to delay the service by 3 seconds
-    // runtime:sleep(1000);
+    //Uncomment this line and restart the service  to delay the service by 1 second
+    //runtime:sleep(1000);
     var temp = airLineDB -> select(q, Flight, p1, p2, p3, p4, p5);
     table<Flight> flights = check temp;
     Flight flight = {};

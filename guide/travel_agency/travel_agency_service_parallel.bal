@@ -91,6 +91,7 @@ service<http:Service> travelAgencyService bind travelAgencyEP {
             }
         }
 
+        //Extracting data from Request's payload
         json arrivalDate = inReqPayload.ArrivalDate;
         json departureDate = inReqPayload.DepartureDate;
         json fromPlace = inReqPayload.From;
@@ -118,9 +119,6 @@ service<http:Service> travelAgencyService bind travelAgencyEP {
         json jsonFlightResponse;
         json jsonVehicleResponse;
         json jsonHotelResponse;
-        json miramarJsonResponse;
-        json aqueenJsonResponse;
-        json elizabethJsonResponse;
         json jsonFlightResponseEmirates;
         json jsonFlightResponseAsiana;
         json jsonFlightResponseQatar;
@@ -212,148 +210,25 @@ service<http:Service> travelAgencyService bind travelAgencyEP {
             }
         }
 
-        // Hotel reservation
-        // Call Hotel reservation service and consume different resources in parallel to check different hotels
-        // Fork - Join to run parallel workers and join the results
-        fork {
-            // Worker to communicate with hotel 'Miramar'
-            worker miramar {
-                http:Request outReq;
-                // Out request payload
-                outReq.setJsonPayload(untaint hotelPayload);
-                // Send a POST request to 'Asiana' and get the results
-                http:Response respWorkerMiramar = check hotelEP -> post("/miramar", outReq);
-                // Reply to the join block from this worker - Send the response from 'Asiana'
-                respWorkerMiramar -> fork;
-            }
-
-            // Worker to communicate with hotel 'Aqueen'
-            worker aqueen {
-                http:Request outReq;
-                // Out request payload
-                outReq.setJsonPayload(untaint hotelPayload);
-                // Send a POST request to 'Aqueen' and get the results
-                http:Response respWorkerAqueen = check hotelEP -> post("/aqueen", outReq);
-                // Reply to the join block from this worker - Send the response from 'Aqueen'
-                respWorkerAqueen -> fork;
-            }
-
-            // Worker to communicate with hotel 'Elizabeth'
-            worker elizabeth {
-                http:Request outReq;
-                // Out request payload
-                outReq.setJsonPayload(untaint hotelPayload);
-                // Send a POST request to 'Elizabeth' and get the results
-                http:Response respWorkerElizabeth = check hotelEP -> post("/elizabeth", outReq);
-                // Reply to the join block from this worker - Send the response from 'Elizabeth'
-                respWorkerElizabeth -> fork;
-            }
-        } join (all) (map hotelResponses) {
-            // Wait until the responses received from all the workers running in parallel
-
-            int miramarDistance;
-            int aqueenDistance;
-            int elizabethDistance;
-
-            // Get the response and distance to the preferred location from the hotel 'Miramar'
-            if (hotelResponses["miramar"] != null) {
-                var responseMiramar = check <http:Response>(hotelResponses["miramar"]);
-                miramarJsonResponse = check responseMiramar.getJsonPayload();
-                match miramarJsonResponse.DistanceToLocation {
-                    int intVal => miramarDistance = intVal;
-                    any otherVals => miramarDistance = -1;
-                }
-            }
-
-            // Get the response and distance to the preferred location from the hotel 'Aqueen'
-            if (hotelResponses["aqueen"] != null) {
-                var responseAqueen = check <http:Response>(hotelResponses["aqueen"]);
-                aqueenJsonResponse = check responseAqueen.getJsonPayload();
-                match aqueenJsonResponse.DistanceToLocation {
-                    int intVal => aqueenDistance = intVal;
-                    any otherVals => aqueenDistance = -1;
-                }
-            }
-
-            // Get the response and distance to the preferred location from the hotel 'Elizabeth'
-            if (hotelResponses["elizabeth"] != null) {
-                var responseElizabeth = check <http:Response>(hotelResponses["elizabeth"]);
-                elizabethJsonResponse = check responseElizabeth.getJsonPayload();
-                match elizabethJsonResponse.DistanceToLocation {
-                    int intVal => elizabethDistance = intVal;
-                    any otherVals => elizabethDistance = -1;
-                }
-            }
-
-            // Select the hotel with the lowest distance
-            if (miramarDistance < aqueenDistance) {
-                if (miramarDistance < elizabethDistance) {
-                    jsonHotelResponse = miramarJsonResponse;
-                }
-            } else {
-                if (aqueenDistance < elizabethDistance) {
-                    jsonHotelResponse = aqueenJsonResponse;
-                }
-                else {
-                    jsonHotelResponse = elizabethJsonResponse;
-                }
-            }
-        }
-
         // Car rental
-        // Call Car rental service and consume different resources in parallel to check different companies
-        // Fork - Join to run parallel workers and join the results
-        fork {
-            // Worker to communicate with Company 'DriveSg'
-            worker driveSg {
-                http:Request outReq;
-                // Out request payload
-                outReq.setJsonPayload(untaint vehiclePayload);
-                // Send a POST request to 'DriveSg' and get the results
-                http:Response respWorkerDriveSg = check carRentalEP -> post("/driveSg", outReq);
-                // Reply to the join block from this worker - Send the response from 'DriveSg'
-                respWorkerDriveSg -> fork;
-            }
+        // Call Car rental service and place a booking for a car
+        // There's only one car renter, hence, no need of parallel service calls
+        http:Request driveSgRequest;
+        //Out request payload
+        driveSgRequest.setJsonPayload(untaint vehiclePayload, contentType = "application/json");
+        // Send a POST request to 'DriveSg' and get the results
+        http:Response driveSgResponse = check carRentalEP -> post("/driveSg", driveSgRequest);
+        jsonVehicleResponse = check driveSgResponse.getJsonPayload();
 
-            // Worker to communicate with Company 'DreamCar'
-            worker dreamCar {
-                http:Request outReq;
-                // Out request payload
-                outReq.setJsonPayload(untaint vehiclePayload);
-                // Send a POST request to 'DreamCar' and get the results
-                http:Response respWorkerDreamCar = check carRentalEP -> post("/dreamCar", outReq);
-                // Reply to the join block from this worker - Send the response from 'DreamCar'
-                respWorkerDreamCar -> fork;
-            }
-
-            // Worker to communicate with Company 'Sixt'
-            worker sixt {
-                http:Request outReq;
-                // Out request payload
-                outReq.setJsonPayload(untaint vehiclePayload);
-                // Send a POST request to 'Sixt' and get the results
-                http:Response respWorkerSixt = check carRentalEP -> post("/sixt", outReq);
-                // Reply to the join block from this worker - Send the response from 'Sixt'
-                respWorkerSixt -> fork;
-            }
-        } join (some 1) (map vehicleResponses) {
-            // Get the first responding worker
-
-            // Get the response from company 'DriveSg' if not null
-            if (vehicleResponses["driveSg"] != null) {
-                var responseDriveSg = check <http:Response>(vehicleResponses["driveSg"]);
-                jsonVehicleResponse = check responseDriveSg.getJsonPayload();
-            } 
-            else if (vehicleResponses["dreamCar"] != null) {
-                // Get the response from company 'DreamCar' if not null
-                var responseDreamCar = check <http:Response>(vehicleResponses["dreamCar"]);
-                jsonVehicleResponse = check responseDreamCar.getJsonPayload();
-            } else if (vehicleResponses["sixt"] != null) {
-                // Get the response from company 'Sixt' if not null
-                var responseSixt = check <http:Response>(vehicleResponses["sixt"]);
-                jsonVehicleResponse = check responseSixt.getJsonPayload();
-            }
-        }
+        // Hotel reservation
+        // Call Hotel reservation service and place a booking for a hotel
+        // Again, we only call one hotel service
+        http:Request elizabethRequest;
+        //Out request payload
+        elizabethRequest.setJsonPayload(untaint hotelPayload, contentType = "application/json");
+        // Send a POST request to 'Elizabeth' and get the results
+        http:Response elizabethResponse = check hotelEP -> post("/elizabeth", elizabethRequest);
+        jsonHotelResponse = check elizabethResponse.getJsonPayload();
 
         // Construct the client response
         json clientResponse = {

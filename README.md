@@ -503,7 +503,7 @@ NOTE: You may need to add `store` index pattern to kibana visualization tool to 
  
      ![logging screenshot](images/logging-screenshot.png "Kibana UI")
      
-## Usage of Observalbility
+## Usages of Observalbility
 
 All four Ballerina services push tracing data to Jaeger on port `5775`. Send one request to the travel agency service and check the Jaeger results.
 ```bash
