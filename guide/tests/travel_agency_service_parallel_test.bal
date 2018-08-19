@@ -20,7 +20,7 @@ import ballerina/test;
 @test:BeforeSuite
 function beforeFunc () {
     // Start the 'travelAgencyService' before running the test
-    _ = test:startServices("travel_agency");
+    _= test:startServices("travel_agency");
 
     // 'travelAgencyService' needs to communicate with airline reservation, hotel reservation and car rental services
     // Therefore, start these three services before running the test
@@ -47,12 +47,12 @@ function testTravelAgencyService () {
 
     // Request Payload
     json requestPayload = {
-        "ArrivalDate":"12-03-2018",
-        "DepartureDate":"13-04-2018",
-        "From":"Colombo",
-        "To":"Changi",
-        "VehicleType":"Car",
-        "Location":"Changi"
+        ArrivalDate : "2007-11-06",
+        DepartureDate :"2007-11-06",
+        From : "CMB",
+        To : "DXB",
+        VehicleType : "Car",
+        Location : "Changi"
     };
 
     // Set request payload
@@ -63,13 +63,11 @@ function testTravelAgencyService () {
     test:assertEquals(response.statusCode, 200, msg = "Travel agency service did not respond with 200 OK signal!");
     // Check whether the response is as expected
     // Flight details
-    string expectedFlight = "{\"Airline\":\"Emirates\",\"ArrivalDate\":\"12-03-2018\",\"ReturnDate\":\"13-04-2018\"," +
-        "\"From\":\"Colombo\",\"To\":\"Changi\",\"Price\":273}";
+    string expectedFlight = "{\"Flight\":{\"flightNo\":1,\"airline\":\"Emirates\",\"arrivalDate\":\"2007-11-06+05:30\",\"departureDate\":\"2007-11-06+05:30\",\"to\":\"DXB\",\"rom\":\"CMB\",\"price\":100}";
     json resPayload = check response.getJsonPayload();
     test:assertEquals(resPayload.Flight.toString(), expectedFlight, msg = "Response mismatch!");
     // Hotel details
-    string expectedHotel = "{\"HotelName\":\"Elizabeth\",\"FromDate\":\"12-03-2018\"," +
-        "\"ToDate\":\"13-04-2018\",\"DistanceToLocation\":2}";
+    string expectedHotel = "{\"Hotel\":{\"HotelName\":\"Elizabeth\",\"FromDate\":\"2007-11-06\",\"ToDate\":\"2007-11-06\",\"DistanceToLocation\":2}";
     test:assertEquals(resPayload.Hotel.toString(), expectedHotel, msg = "Response mismatch!");
 }
 

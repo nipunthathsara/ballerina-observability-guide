@@ -18,6 +18,7 @@ import ballerina/http;
 import ballerina/mysql;
 import ballerina/sql;
 import ballerina/runtime;
+import ballerina/log;
 //import ballerinax/docker;
 //import ballerinax/kubernetes;
 
@@ -61,6 +62,8 @@ service<http:Service> airlineReservationService bind airlineEP {
         http:Response response;
         json reqPayload;
 
+        string resourcePath = "/airline/qatarAirways";
+        log:printDebug("Received at : " + resourcePath);
         // Try parsing the JSON payload from the request
         match request.getJsonPayload() {
             // Valid JSON payload
@@ -70,6 +73,7 @@ service<http:Service> airlineReservationService bind airlineEP {
                 response.statusCode = 400;
                 response.setJsonPayload({"Message":"Invalid payload - Not a valid JSON payload"});
                 _ = caller -> respond(response);
+                log:printWarn("Invalid payload at : " + resourcePath);
                 done;
             }
         }
@@ -85,11 +89,15 @@ service<http:Service> airlineReservationService bind airlineEP {
             response.statusCode = 400;
             response.setJsonPayload({"Message":"Bad Request - Invalid Payload"});
             _ = caller -> respond(response);
+            log:printWarn("Request with unsufficient info at : " + resourcePath + " : " );
             done;
         }
 
+        // Query the database to retrieve flight details
+        json flightDetails = untaint airlineDBService(airline, departureDate, arrivalDate, to, rom);
         // Response payload
-        response.setJsonPayload(untaint airlineDBService(airline, departureDate, arrivalDate, to, rom));
+        log:printDebug("Client response from Qatar : " + flightDetails.toString());
+        response.setJsonPayload(flightDetails);
         // Send the response to the caller
         _ = caller -> respond(response);
     }
@@ -101,6 +109,8 @@ service<http:Service> airlineReservationService bind airlineEP {
         http:Response response;
         json reqPayload;
 
+        string resourcePath = "/airline/asiana";
+        log:printDebug("Received at : " + resourcePath);
         // Try parsing the JSON payload from the request
         match request.getJsonPayload() {
             // Valid JSON payload
@@ -110,6 +120,7 @@ service<http:Service> airlineReservationService bind airlineEP {
                 response.statusCode = 400;
                 response.setJsonPayload({"Message":"Invalid payload - Not a valid JSON payload"});
                 _ = caller -> respond(response);
+                log:printWarn("Invalid payload at : " + resourcePath);
                 done;
             }
         }
@@ -125,11 +136,15 @@ service<http:Service> airlineReservationService bind airlineEP {
             response.statusCode = 400;
             response.setJsonPayload({"Message":"Bad Request - Invalid Payload"});
             _ = caller -> respond(response);
+            log:printWarn("Request with unsufficient info at : " + resourcePath + " : " );
             done;
         }
 
+        // Query the database to retrieve flight details
+        json flightDetails = untaint airlineDBService(airline, departureDate, arrivalDate, to, rom);
         // Response payload
-        response.setJsonPayload(untaint airlineDBService(airline, departureDate, arrivalDate, to, rom));
+        log:printDebug("Client response from Asiana : " + flightDetails.toString());
+        response.setJsonPayload(flightDetails);
         // Send the response to the caller
         _ = caller -> respond(response);
     }
@@ -141,6 +156,8 @@ service<http:Service> airlineReservationService bind airlineEP {
         http:Response response;
         json reqPayload;
 
+        string resourcePath = "/airline/emirates";
+        log:printDebug("Received at : " + resourcePath);
         // Try parsing the JSON payload from the request
         match request.getJsonPayload() {
             // Valid JSON payload
@@ -150,6 +167,7 @@ service<http:Service> airlineReservationService bind airlineEP {
                 response.statusCode = 400;
                 response.setJsonPayload({"Message":"Invalid payload - Not a valid JSON payload"});
                 _ = caller -> respond(response);
+                log:printWarn("Invalid payload at : " + resourcePath);
                 done;
             }
         }
@@ -165,11 +183,15 @@ service<http:Service> airlineReservationService bind airlineEP {
             response.statusCode = 400;
             response.setJsonPayload({"Message":"Bad Request - Invalid Payload"});
             _ = caller -> respond(response);
+            log:printWarn("Request with unsufficient info at : " + resourcePath + " : " );
             done;
         }
         
+        // Query the database to retrieve flight details
+        json flightDetails = untaint airlineDBService(airline, departureDate, arrivalDate, to, rom);
         // Response payload
-        response.setJsonPayload(untaint airlineDBService(airline, departureDate, arrivalDate, to, rom));
+        log:printDebug("Client response from Emirates : " + flightDetails.toString());
+        response.setJsonPayload(flightDetails);
         // Send the response to the caller
         _ = caller -> respond(response);
     }
@@ -186,6 +208,9 @@ type Flight record {
 };
 
 function airlineDBService (string airline, string departureDate, string arrivalDate, string to, string rom) returns (json){
+    // Database endpoint configuration moved inside the function to prevent the error on service startup when wrong 
+    // database credentials are given
+    // Wrong credentials will be given to observe the results of no database connectivity
     endpoint mysql:Client airLineDB{
     host:"localhost",
     port:3306,
@@ -194,13 +219,17 @@ function airlineDBService (string airline, string departureDate, string arrivalD
     password:"root",
     dbOptions: { useSSL: false }
     };
-    
+     log:printDebug("Invoking airlineDBService with parameters - airline : " + airline + ", departureDate : " + departureDate 
+    + ", arrivalDate : " + arrivalDate + ", to : " + to + ", from : " + rom);
+    // Set arguments for the query
     sql:Parameter p1 = {sqlType:sql:TYPE_VARCHAR, value:airline};
     sql:Parameter p2 = {sqlType:sql:TYPE_DATE, value:departureDate};
     sql:Parameter p3 = {sqlType:sql:TYPE_DATE, value:arrivalDate};
     sql:Parameter p4 = {sqlType:sql:TYPE_VARCHAR, value:to};
     sql:Parameter p5 = {sqlType:sql:TYPE_VARCHAR, value:rom};
+    // Query to be executed
     string q = "SELECT * FROM FLIGHTS WHERE airline = ? AND departureDate = ? AND arrivalDate = ? AND dest = ? AND rom = ?";
+    log:printDebug("airlineDBService query : " + q);
     //Uncomment this line and restart the service  to delay the service by 1 second
     //runtime:sleep(1000);
     var temp = airLineDB -> select(q, Flight, p1, p2, p3, p4, p5);
@@ -215,5 +244,6 @@ function airlineDBService (string airline, string departureDate, string arrivalD
         flight.rom = i.rom;
         flight.price = i.price;
     }
+    log:printDebug("airlineDBService response : " );
     return <json> flight but {error => {}};
 }

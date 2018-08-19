@@ -75,8 +75,7 @@ service<http:Service> travelAgencyService bind travelAgencyEP {
         json inReqPayload;
 
         string resourcePath = "/travel/arrangeTour";
-        log:printTrace("Received at : " + resourcePath);
-        log:printDebug("Payload at : " + resourcePath + " : ");
+        log:printDebug("Received at : " + resourcePath);
         // Try parsing the JSON payload from the request
         match inRequest.getJsonPayload() {
             // Valid JSON payload
@@ -86,7 +85,7 @@ service<http:Service> travelAgencyService bind travelAgencyEP {
                 outResponse.statusCode = 400;
                 outResponse.setJsonPayload({"Message":"Invalid payload - Not a valid JSON payload"});
                 _ = client -> respond(outResponse);
-                log:printWarn("Invalid payload at : " + resourcePath + " : ");
+                log:printWarn("Invalid payload at : " + resourcePath);
                 done;
             }
         }
@@ -105,16 +104,19 @@ service<http:Service> travelAgencyService bind travelAgencyEP {
             outResponse.statusCode = 400;
             outResponse.setJsonPayload({"Message":"Bad Request - Invalid Payload"});
             _ = client -> respond(outResponse);
-            log:printWarn("Invalid payload at : " + resourcePath + " : ");
+            log:printWarn("Request with unsufficient info at : " + resourcePath + " : " );
             done;
         }
 
         // Out request payload for Airline reservation service
         json flightPayload = {"ArrivalDate":arrivalDate, "DepartureDate":departureDate, "From":fromPlace, "To":toPlace};
+        log:printDebug("Flight payload : " + flightPayload.toString());
         // Out request payload for Hotel reservation service
         json hotelPayload = {"ArrivalDate":arrivalDate, "DepartureDate":departureDate, "Location":location};
+        log:printDebug("Hotel payload : " + hotelPayload.toString());
         // Out request payload for Car rental service
         json vehiclePayload = {"ArrivalDate":arrivalDate, "DepartureDate":departureDate, "VehicleType":vehicleType};
+        log:printDebug("Vehicle payload : " + vehiclePayload.toString());
 
         json jsonFlightResponse;
         json jsonVehicleResponse;
@@ -132,6 +134,7 @@ service<http:Service> travelAgencyService bind travelAgencyEP {
                 http:Request outReq;
                 // Out request payload
                 outReq.setJsonPayload(untaint flightPayload);
+                log:printDebug("Sending request to : /qatarAirways");
                 // Send a POST request to 'Qatar Airways' and get the results
                 http:Response respWorkerQatar = check airlineEP -> post("/qatarAirways", outReq);
                 // Reply to the join block from this worker - Send the response from 'Qatar Airways'
@@ -143,6 +146,7 @@ service<http:Service> travelAgencyService bind travelAgencyEP {
                 http:Request outReq;
                 // Out request payload
                 outReq.setJsonPayload(untaint flightPayload);
+                log:printDebug("Sending request to : /asiana");
                 // Send a POST request to 'Asiana' and get the results
                 http:Response respWorkerAsiana = check airlineEP -> post("/asiana", outReq);
                 // Reply to the join block from this worker - Send the response from 'Asiana'
@@ -154,6 +158,7 @@ service<http:Service> travelAgencyService bind travelAgencyEP {
                 http:Request outReq;
                 // Out request payload
                 outReq.setJsonPayload(untaint flightPayload);
+                log:printDebug("Sending request to : /emirates");
                 // Send a POST request to 'Emirates' and get the results
                 http:Response respWorkerEmirates = check airlineEP -> post("/emirates", outReq);
                 // Reply to the join block from this worker - Send the response from 'Emirates'
@@ -208,27 +213,32 @@ service<http:Service> travelAgencyService bind travelAgencyEP {
                     jsonFlightResponse = jsonFlightResponseEmirates;
                 }
             }
+            log:printDebug("Flight response : " + jsonFlightResponse.toString());
         }
 
         // Car rental
         // Call Car rental service and place a booking for a car
-        // There's only one car renter, hence, no need of parallel service calls
+        // There's only one car renter, hence, no need for parallel service calls
         http:Request driveSgRequest;
         //Out request payload
         driveSgRequest.setJsonPayload(untaint vehiclePayload, contentType = "application/json");
+        log:printDebug("Sending request to : /driveSg");
         // Send a POST request to 'DriveSg' and get the results
         http:Response driveSgResponse = check carRentalEP -> post("/driveSg", driveSgRequest);
         jsonVehicleResponse = check driveSgResponse.getJsonPayload();
+        log:printDebug("Vehicle response : " + jsonVehicleResponse.toString());
 
         // Hotel reservation
         // Call Hotel reservation service and place a booking for a hotel
-        // Again, we only call one hotel service
+        // There's only one hotel available, hence, no need for parallel service calls
         http:Request elizabethRequest;
         //Out request payload
         elizabethRequest.setJsonPayload(untaint hotelPayload, contentType = "application/json");
+        log:printDebug("Sending request to : /elizabeth");
         // Send a POST request to 'Elizabeth' and get the results
         http:Response elizabethResponse = check hotelEP -> post("/elizabeth", elizabethRequest);
         jsonHotelResponse = check elizabethResponse.getJsonPayload();
+        log:printDebug("Hotel response : " + jsonHotelResponse.toString());
 
         // Construct the client response
         json clientResponse = {
@@ -238,6 +248,7 @@ service<http:Service> travelAgencyService bind travelAgencyEP {
         };
 
         // Response payload
+        log:printDebug("Client response : " + clientResponse.toString());
         outResponse.setJsonPayload(untaint clientResponse);
         // Send the response to the client
         _ = client -> respond(outResponse);

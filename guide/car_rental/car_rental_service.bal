@@ -17,6 +17,7 @@
 import ballerina/http;
 import ballerina/mysql;
 import ballerina/sql;
+import ballerina/log;
 //import ballerinax/docker;
 //import ballerinax/kubernetes;
 
@@ -60,6 +61,8 @@ service<http:Service> carRentalService bind carEP {
         http:Response response;
         json reqPayload;
 
+        string resourcePath = "/car/driveSg";
+        log:printDebug("Received at : " + resourcePath);
         // Try parsing the JSON payload from the request
         match request.getJsonPayload() {
             // Valid JSON payload
@@ -69,6 +72,7 @@ service<http:Service> carRentalService bind carEP {
                 response.statusCode = 400;
                 response.setJsonPayload({"Message":"Invalid payload - Not a valid JSON payload"});
                 _ = caller -> respond(response);
+                log:printWarn("Invalid payload at : " + resourcePath);
                 done;
             }
         }
@@ -83,16 +87,22 @@ service<http:Service> carRentalService bind carEP {
             response.statusCode = 400;
             response.setJsonPayload({"Message":"Bad Request - Invalid Payload"});
             _ = caller -> respond(response);
+            log:printWarn("Request with unsufficient info at : " + resourcePath + " : " );
             done;
         }
 
+        // Query the database to retrieve car details
+        json carDetails = untaint carDBService(company, departureDate, arrivalDate, vehicleType);
         // Response payload
-        response.setJsonPayload(untaint carDBService(company, departureDate, arrivalDate, vehicleType));
+        log:printDebug("Client response : " + carDetails.toString());
+        response.setJsonPayload(carDetails);
         // Send the response to the caller
         _ = caller -> respond(response);
+
     }
 }
 
+// Define car record type
 type Car record {
     string company;
     string arrivalDate;
@@ -101,6 +111,7 @@ type Car record {
     int price;
 };
 
+// Database endpoint
 endpoint mysql:Client carDB{
     host:"localhost",
     port:3306,
@@ -110,12 +121,19 @@ endpoint mysql:Client carDB{
     dbOptions: { useSSL: false }
 };
 
+// Function to do databse calls
 function carDBService (string company, string departureDate, string arrivalDate, string vehicleType) returns (json){
+    log:printDebug("Invoking carDBService with parameters - company : " + company + ", departureDate : " + departureDate 
+    + ", arrivalDate : " + arrivalDate + ", vehicleType : " + vehicleType);
+    // Set arguments for the query
     sql:Parameter p1 = {sqlType:sql:TYPE_VARCHAR, value:company};
     sql:Parameter p2 = {sqlType:sql:TYPE_DATE, value:departureDate};
     sql:Parameter p3 = {sqlType:sql:TYPE_DATE, value:arrivalDate};
     sql:Parameter p4 = {sqlType:sql:TYPE_VARCHAR, value:vehicleType};
+    // Query to be executed
     string q = "SELECT * FROM CARS WHERE company = ? AND departureDate = ? AND arrivalDate = ? AND vehicleType = ?";
+    log:printDebug("carDBService query : " + q);
+    // Perform the SELECT operation on carDB endpoint
     var temp = carDB -> select(q, Car, p1, p2, p3, p4);
     table<Car> cars = check temp;
     Car car = {};
@@ -126,5 +144,6 @@ function carDBService (string company, string departureDate, string arrivalDate,
         car.vehicleType = i.vehicleType;
         car.price = i.price;
     }
+    log:printDebug("carDBService response : " );
     return <json> car but {error => {}};
 }

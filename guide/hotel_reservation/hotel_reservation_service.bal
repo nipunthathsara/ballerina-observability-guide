@@ -15,6 +15,7 @@
 // under the License.
 
 import ballerina/http;
+import ballerina/log;
 //import ballerinax/docker;
 //import ballerinax/kubernetes;
 
@@ -58,6 +59,8 @@ service<http:Service> hotelReservationService bind hotelEP {
         http:Response response;
         json reqPayload;
 
+        string resourcePath = "/hotel/elizabeth";
+        log:printDebug("Received at : " + resourcePath);
         // Try parsing the JSON payload from the request
         match request.getJsonPayload() {
             // Valid JSON payload
@@ -67,6 +70,7 @@ service<http:Service> hotelReservationService bind hotelEP {
                 response.statusCode = 400;
                 response.setJsonPayload({"Message":"Invalid payload - Not a valid JSON payload"});
                 _ = caller -> respond(response);
+                log:printWarn("Invalid payload at : " + resourcePath);
                 done;
             }
         }
@@ -80,10 +84,12 @@ service<http:Service> hotelReservationService bind hotelEP {
             response.statusCode = 400;
             response.setJsonPayload({"Message":"Bad Request - Invalid Payload"});
             _ = caller -> respond(response);
+            log:printWarn("Request with unsufficient info at : " + resourcePath + " : " );
             done;
         }
 
         // Mock logic
+        // Hotel service doesn't do database calls to retrieve information, response in hard-coded
         // Details of the hotel
         json hotelDetails = {
             "HotelName":"Elizabeth",
@@ -92,6 +98,7 @@ service<http:Service> hotelReservationService bind hotelEP {
             "DistanceToLocation":2
         };
         // Response payload
+        log:printDebug("Client response : " + hotelDetails.toString());
         response.setJsonPayload(untaint hotelDetails);
         // Send the response to the caller
         _ = caller -> respond(response);
