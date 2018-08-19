@@ -19,8 +19,8 @@ import ballerina/http;
 
 // Common request Payload
 json requestPayload = {
-    "ArrivalDate":"12-03-2018",
-    "DepartureDate":"13-04-2018",
+    "ArrivalDate":"2007-11-06",
+    "DepartureDate":"2007-11-06",
     "VehicleType":"Car"
 };
 
@@ -48,46 +48,8 @@ function testResourceDriveSg () {
     // Expected response code is 200
     test:assertEquals(response.statusCode, 200, msg = "Car rental service did not respond with 200 OK signal!");
     // Check whether the response is as expected
-    string expected = "{\"Company\":\"DriveSG\",\"VehicleType\":\"Car\",\"FromDate\":\"12-03-2018\"," +
-        "\"ToDate\":\"13-04-2018\",\"PricePerDay\":5}";
-    json resPayload = check response.getJsonPayload();
-    test:assertEquals(resPayload.toString(), expected, msg = "Response mismatch!");
-}
-
-// Function to test resource 'dreamCar'
-@test:Config
-function testResourceDreamCar () {
-    // Initialize the empty http requests and responses
-    http:Request req;
-
-    // Set request payload
-    req.setJsonPayload(requestPayload);
-    // Send a 'post' request and obtain the response
-    http:Response response = check clientEP -> post("/dreamCar", req);
-    // Expected response code is 200
-    test:assertEquals(response.statusCode, 200, msg = "Car rental service did not respond with 200 OK signal!");
-    // Check whether the response is as expected
-    string expected = "{\"Company\":\"DreamCar\",\"VehicleType\":\"Car\",\"FromDate\":\"12-03-2018\"," +
-        "\"ToDate\":\"13-04-2018\",\"PricePerDay\":6}";
-    json resPayload = check response.getJsonPayload();
-    test:assertEquals(resPayload.toString(), expected, msg = "Response mismatch!");
-}
-
-// Function to test resource 'sixt'
-@test:Config
-function testResourceSixt () {
-    // Initialize the empty http requests and responses
-    http:Request req;
-
-    // Set request payload
-    req.setJsonPayload(requestPayload);
-    // Send a 'post' request and obtain the response
-    http:Response response = check clientEP -> post("/sixt", req);
-    // Expected response code is 200
-    test:assertEquals(response.statusCode, 200, msg = "Car rental service did not respond with 200 OK signal!");
-    // Check whether the response is as expected
-    string expected = "{\"Company\":\"Sixt\",\"VehicleType\":\"Car\",\"FromDate\":\"12-03-2018\"," +
-        "\"ToDate\":\"13-04-2018\",\"PricePerDay\":7}";
+    string expected = "{\"company\":\"DriveSG\",\"VehicleType\":\"Car\",\"FromDate\":\"2007-11-06\"," +
+        "\"ToDate\":\"2007-11-06\",\"PricePerDay\":5}";
     json resPayload = check response.getJsonPayload();
     test:assertEquals(resPayload.toString(), expected, msg = "Response mismatch!");
 }

@@ -197,6 +197,7 @@ service<http:Service> airlineReservationService bind airlineEP {
     }
 }
 
+// Define Flight record type
 type Flight record {
     int flightNo;
     string airline;
