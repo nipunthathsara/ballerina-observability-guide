@@ -4,6 +4,10 @@
 
 Observability of services is useful to retrieve internal information for easier troubleshooting and system status analysis. Ballerina allows to observe its services using Monitoring, Logging and Distributed tracing methods, with the use of other external tools.
 
+Ballerina observability can be categorized into two types as,
+- Default observability - Each Ballerina service can expose its internal information just by enabling the built-in observability. (Eg : Network call duration)
+- User-defined observability - More specific data can be retrieved by using user-defined observability. (Eg : Function execution time) This requires the explicit import of the package `ballerina/observe`.
+
 > This guide is a modification of the [Parallel Service Orchestration guide](https://github.com/nipunthathsara/parallel-service-orchestration) to explain a real-world use case of Ballerina observability.
 
 Following are the sections available in this guide.
@@ -16,20 +20,17 @@ Following are the sections available in this guide.
 
 ## Introduction
 
+This guide explains the applicability of Ballerina observability in below scenarios. 
+- Identifying the bottleneck
+- Identifying the unavailble services
+- Determining database call duration and bottleneck queries
+- Function execution time (user-defined observability)
+
 Consider a real-world use case of a travel agency that arranges complete tours for users. A tour package includes airline ticket reservation, hotel room reservation and car rental. Therefore, the travel agency service requires communicating with other necessary back-ends. Those back-ends query their databases to retrieve information of availability of their services.
 
-Travel Agency service communicates with multiple services. All three external services (airline reservation, hotel reservation and car rental) contain multiple resources. The travel agency service checks these resources in parallel to select the best-suited resource for each requirement. Each associated service then queries their database for the availability and information of their services. For example, the travel agency service checks three different airways in parallel and selects the airway with the lowest cost. Similarly, it checks several hotels in parallel and selects the closest one to the client's preferred location. 
-Travel agency service initiates the service chain. It communicates with other services and they query their databases to retrieve data. The following diagram illustrates this use case.
+Travel Agency service communicates with multiple services. Airline reservation service has multiple resources for three different airlines, whereas Hotel reservation and Car rental services only have a single resource. The travel agency service checks all airline resources in parallel to select the cheapest available. Each associated service then queries their database for the availability and information of their services. Only Hotel resevation service does not have a associated database. Rather the response is hard-coded to demonstrate the difference in traces.
 
 ![alt text](/images/parallel-service-orchestration.svg)
-
-In the above image, 
-
-(1), (2) - Check all the resources in parallel and wait for all three responses
-
-(3)      - Checks all three resources in parallel and get only the first response
-
-We can use Ballerina's Tracing and Logging functionalities to check how to identify the problematic services. This sample service orchestration can be used to demonstrate a real life use-case of troubleshooting/analyzing web services and database connections with ballerina.
 
 ## Prerequisites
  
@@ -77,20 +78,20 @@ source resources/mysql.sql;
 ```bash
    $ ballerina run car_rental/ -e b7a.observability.metrics.prometheus.port=9799
 ```
-Note that we are passing the prometheus port as a parameter for all the services, except the first one, travel_agency. Travel agency service will publish the metrics data on the port defined in the ballerina.conf file.
+Note that we are overridng the prometheus port by parsing the parameter (`-e b7a.observability.metrics.prometheus.port=xxxx`) for all the services, except the travel_agency service. Travel agency service will publish the metrics data on the port defined in the `ballerina.conf` file (9796). This will avoid any conflict on port being already occupied.
 ```
 [b7a.observability.metrics.prometheus]
 port=9796
 ```
-As the default port is already being occupied, we start the remaining three services with different ports to avoid conflicts.
-```
--e b7a.observability.metrics.prometheus.port=979x
-```
+`ballerina.conf` file defines 9796 as the default port on which, ballerina will publish its metrics information to be consumed by Prometheus.
 
 - Invoke the travel agency service by sending a POST request to arrange a tour.
 
 ```bash
-   curl -v -X POST -d '{"ArrivalDate":"2007-11-06", "DepartureDate":"2007-11-06", "From":"CMB", "To":"DXB", "VehicleType":"Car", "Location":"Changi"}' "http://localhost:9090/travel/arrangeTour" -H "Content-Type:application/json" 
+   curl -v -X POST -d \
+   '{"ArrivalDate":"2007-11-06", "DepartureDate":"2007-11-06", "From":"CMB", "To":"DXB", 
+   "VehicleType":"Car", "Location":"Changi"}' \
+   "http://localhost:9090/travel/arrangeTour" -H "Content-Type:application/json" 
 ```
 
 - Travel agency service will send a response similar to the following:
@@ -99,13 +100,15 @@ As the default port is already being occupied, we start the remaining three serv
    HTTP/1.1 200 OK
     {
         "Flight":{
-            "flightNo":1,"airline":"Emirates","arrivalDate":"2007-11-06+05:30","departureDate":"2007-11-06+05:30","to":"DXB","rom":"CMB","price":100
+            "flightNo":1,"airline":"Emirates","arrivalDate":"2007-11-06+05:30",
+            "departureDate":"2007-11-06+05:30","to":"DXB","rom":"CMB","price":100
         },
         "Hotel":{
             "HotelName":"Elizabeth","FromDate":"2007-11-06","ToDate":"2007-11-06","DistanceToLocation":2
         },
         "Vehicle":{
-            "company":"Sixt","arrivalDate":"2007-11-06+05:30","departureDate":"2007-11-06+05:30","vehicleType":"Car","price":30
+            "company":"Sixt","arrivalDate":"2007-11-06+05:30","departureDate":"2007-11-06+05:30",
+            "vehicleType":"Car","price":30
         }
     }
 ```
