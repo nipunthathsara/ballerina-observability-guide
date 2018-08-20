@@ -127,7 +127,7 @@ service<http:Service> travelAgencyService bind travelAgencyEP {
         json jsonFlightResponseQatar;
 
         // Uncomment to start a new span to observe duration for all three airline service calls
-        //int spanId = check observe:startSpan("Call all the airlines");
+        // int spanId = check observe:startSpan("Call all the airlines");
         // Airline reservation
         // Call Airline reservation service and consume different resources in parallel to check different airways
         // Fork - Join to run parallel workers and join the results
@@ -169,7 +169,7 @@ service<http:Service> travelAgencyService bind travelAgencyEP {
             }
         } join (all) (map airlineResponses) {
             // Uncomment to finish the span when all three airlines have responded
-            //_ = observe:finishSpan(spanId);
+            // _ = observe:finishSpan(spanId);
             // Wait until the responses received from all the workers running in parallel
             int qatarPrice;
             int asianaPrice;

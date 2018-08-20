@@ -19,6 +19,7 @@ import ballerina/mysql;
 import ballerina/sql;
 import ballerina/runtime;
 import ballerina/log;
+import ballerina/observe;
 //import ballerinax/docker;
 //import ballerinax/kubernetes;
 
@@ -187,8 +188,12 @@ service<http:Service> airlineReservationService bind airlineEP {
             done;
         }
         
+        // Uncomment to observe the function execution time
+        // int spanId = check observe:startSpan("Invoking airlineDBService function");
         // Query the database to retrieve flight details
         json flightDetails = untaint airlineDBService(airline, departureDate, arrivalDate, to, rom);
+        // Uncomment to observe the function execution time
+        // _ = observe:finishSpan(spanId);
         // Response payload
         log:printDebug("Client response from Emirates : " + flightDetails.toString());
         response.setJsonPayload(flightDetails);
@@ -231,8 +236,8 @@ function airlineDBService (string airline, string departureDate, string arrivalD
     // Query to be executed
     string q = "SELECT * FROM FLIGHTS WHERE airline = ? AND departureDate = ? AND arrivalDate = ? AND dest = ? AND rom = ?";
     log:printDebug("airlineDBService query : " + q);
-    //Uncomment this line and restart the service  to delay the service by 1 second
-    //runtime:sleep(1000);
+    // Uncomment this line and restart the service  to delay the service by 1 second
+    // runtime:sleep(1000);
     var temp = airLineDB -> select(q, Flight, p1, p2, p3, p4, p5);
     table<Flight> flights = check temp;
     Flight flight = {};
