@@ -24,12 +24,6 @@ json requestPayload = {
     "VehicleType":"Car"
 };
 
-@test:BeforeSuite
-function beforeFunc () {
-    // Start the 'carRentalService' before running the test
-    _ = test:startServices("car_rental");
-}
-
 // Client endpoint
 endpoint http:Client clientEP {
     url:"http://localhost:9093/car"
@@ -48,14 +42,8 @@ function testResourceDriveSg () {
     // Expected response code is 200
     test:assertEquals(response.statusCode, 200, msg = "Car rental service did not respond with 200 OK signal!");
     // Check whether the response is as expected
-    string expected = "{\"company\":\"DriveSG\",\"VehicleType\":\"Car\",\"FromDate\":\"2007-11-06\"," +
-        "\"ToDate\":\"2007-11-06\",\"PricePerDay\":5}";
+    string expected = "{\"company\":\"DriveSG\", \"arrivalDate\":\"2007-11-06+05:30\", " + 
+        "\"departureDate\":\"2007-11-06+05:30\", \"vehicleType\":\"Car\", \"price\":10}";
     json resPayload = check response.getJsonPayload();
     test:assertEquals(resPayload.toString(), expected, msg = "Response mismatch!");
-}
-
-@test:AfterSuite
-function afterFunc () {
-    // Stop the 'carRentalService' after running the test
-    test:stopServices("car_rental");
 }

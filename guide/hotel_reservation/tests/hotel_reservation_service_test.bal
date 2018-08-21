@@ -24,12 +24,6 @@ json requestPayload = {
     Location : "Changi"
 };
 
-@test:BeforeSuite
-function beforeFunc () {
-    // Start the 'hotelReservationService' before running the test
-    _ = test:startServices("hotel_reservation");
-}
-
 // Client endpoint
 endpoint http:Client clientEP {
     url:"http://localhost:9092/hotel"
@@ -49,14 +43,8 @@ function testResourceElizabeth () {
     test:assertEquals(response.statusCode, 200,
         msg = "Hotel reservation service did not respond with 200 OK signal!");
     // Check whether the response is as expected
-    string expected = "{\"HotelName\":\"Elizabeth\",\"FromDate\":\"2007-11-06\"," +
-        "\"ToDate\":\"2007-11-06\",\"DistanceToLocation\":2}";
+    string expected = "{\"HotelName\":\"Elizabeth\", \"FromDate\":\"2007-11-06\", " +
+        "\"ToDate\":\"2007-11-06\", \"DistanceToLocation\":2}";
     json resPayload = check response.getJsonPayload();
     test:assertEquals(resPayload.toString(), expected, msg = "Response mismatch!");
-}
-
-@test:AfterSuite
-function afterFunc () {
-    // Stop the 'hotelReservationService' after running the test
-    test:stopServices("hotel_reservation");
 }
