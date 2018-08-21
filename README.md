@@ -70,13 +70,13 @@ source resources/mysql.sql;
    $ ballerina run travel_agency/
 ```
 ```bash 
-   $ ballerina run airline_reservation/ -e b7a.observability.metrics.prometheus.port=9797
+   $ ballerina run -e b7a.observability.metrics.prometheus.port=9797 airline_reservation/
 ```
 ```bash
-   $ ballerina run hotel_reservation/ -e b7a.observability.metrics.prometheus.port=9798
+   $ ballerina run -e b7a.observability.metrics.prometheus.port=9798 hotel_reservation/
 ```
 ```bash
-   $ ballerina run car_rental/ -e b7a.observability.metrics.prometheus.port=9799
+   $ ballerina run -e b7a.observability.metrics.prometheus.port=9799 car_rental/
 ```
 Note that we are overridng the prometheus port by parsing the parameter (`-e b7a.observability.metrics.prometheus.port=xxxx`) for all the services, except the travel_agency service. Travel agency service will publish the metrics data on the port defined in the `ballerina.conf` file (9796). This will avoid any conflicts on port being already occupied.
 - Invoke the travel agency service by sending a POST request to arrange a tour.
@@ -184,10 +184,10 @@ Follow the below steps to set up Prometheus and view metrics Ballerina services.
     - job_name: 'prometheus'
    
    static_configs:
-        - targets: ['127.0.0.1:9796', '127.0.0.1:9797', '127.0.0.1:9798', '127.0.0.1:9799']
+        - targets: ['0.0.0.0:9796', '0.0.0.0:9797', '0.0.0.0:9798', '0.0.0.0:9799']
 ```
 
-   NOTE : Replace `127.0.0.1` with your local Docker IP, if you are deplyoing the services in Docker. We've added multiple targets with differnt ports as we are publishing data from 4 different services and expect Prometheus to capture them all.
+   NOTE : Replace `0.0.0.0` with your local Docker IP, if you are deplyoing the services in Docker. We've added multiple targets with differnt ports as we are publishing data from 4 different services and expect Prometheus to capture them all.
    
 - Run the Prometheus docker image using the following command (If you haven't already started Prometheus as instructed in the [prerequisites](#prerequisites) section. Make sure you've reconfigured `prometheus.yml` file as above to suite this sample)
 ```
