@@ -56,10 +56,10 @@ endpoint http:Listener airlineEP {
 @http:ServiceConfig {basePath:"/airline"}
 service<http:Service> airlineReservationService bind airlineEP {
 
-    // Resource 'flightConcord', which checks about airline 'Qatar Airways'
+    // Resource 'flightQatar', which checks about airline 'Qatar Airways'
     @http:ResourceConfig {methods:["POST"], path:"/qatarAirways", consumes:["application/json"],
         produces:["application/json"]}
-    flightConcord (endpoint caller, http:Request request) {
+    flightQatar (endpoint caller, http:Request request) {
         http:Response response;
         json reqPayload;
 
@@ -213,19 +213,19 @@ type Flight record {
     int price;
 };
 
-endpoint mysql:Client airLineDB{
-    host:"localhost",
-    port:3306,
-    name:"testdb2",
-    username:"root",
-    password:"root",
-    dbOptions: { useSSL: false }
-};
 function airlineDBService (string airline, string departureDate, string arrivalDate, string to, string rom) returns (json){
     // Database endpoint configuration moved inside the function to prevent the error on service startup when wrong 
     // database credentials are given
     // Wrong credentials will be given to observe the results of no database connectivity
-    
+    endpoint mysql:Client airLineDB{
+        host:"localhost",
+        port:3306,
+        name:"testdb2",
+        username:"root",
+        password:"root",
+        dbOptions: { useSSL: false }
+    };
+
      log:printDebug("Invoking airlineDBService with parameters - airline : " + airline + ", departureDate : " + departureDate 
     + ", arrivalDate : " + arrivalDate + ", to : " + to + ", from : " + rom);
     // Set arguments for the query

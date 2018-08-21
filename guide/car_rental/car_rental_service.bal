@@ -98,7 +98,6 @@ service<http:Service> carRentalService bind carEP {
         response.setJsonPayload(carDetails);
         // Send the response to the caller
         _ = caller -> respond(response);
-
     }
 }
 
@@ -144,6 +143,6 @@ function carDBService (string company, string departureDate, string arrivalDate,
         car.vehicleType = i.vehicleType;
         car.price = i.price;
     }
-    log:printDebug("carDBService response : " );
+    log:printDebug("carDBService response : ");
     return <json> car but {error => {}};
 }

@@ -30,9 +30,9 @@ endpoint http:Client clientEP {
     url:"http://localhost:9091/airline"
 };
 
-// Function to test resource 'flightConcord'
+// Function to test resource 'flightQatar'
 @test:Config
-function testResourceFlightConcord () {
+function testResourceFlightQatar () {
     // Initialize the empty http requests and responses
     http:Request req;
     // Set request payload
