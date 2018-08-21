@@ -8,7 +8,7 @@ Ballerina observability can be categorized into two types as,
 - Default observability - Each Ballerina service can expose its internal information just by enabling the built-in observability. (Eg : Network call duration)
 - User-defined observability - More specific data can be retrieved by using user-defined observability. (Eg : Function execution time) This requires the explicit import of the package `ballerina/observe`.
 
-> This guide is a modification of the [Parallel Service Orchestration guide](https://github.com/nipunthathsara/parallel-service-orchestration) to explain a real-world use case of Ballerina observability.
+> This guide is a modification of the [Parallel Service Orchestration guide](https://github.com/ballerina-guides/parallel-service-orchestration) to explain a real-world use case of Ballerina observability.
 
 Following are the sections available in this guide.
 
@@ -47,7 +47,7 @@ Travel Agency service communicates with multiple services. Airline reservation s
 
 ## Testing the services
 
-### Setting up the environment
+### Setting up the environment  
 
 Please refer to the [Prerequisites](#prerequisites) section for information on setting up the required tools and environment. Access the below URLs and make sure you have Prometheus, Grafana and Jaeger servers up and running.
 - Prometheus - [http://localhost:19090](http://localhost:19090)
