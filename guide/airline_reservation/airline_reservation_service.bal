@@ -90,7 +90,7 @@ service<http:Service> airlineReservationService bind airlineEP {
             response.statusCode = 400;
             response.setJsonPayload({"Message":"Bad Request - Invalid Payload"});
             _ = caller -> respond(response);
-            log:printWarn("Request with unsufficient info at : " + resourcePath + " : " );
+            log:printWarn("Request with unsufficient info at : " + resourcePath + " : " + check request.getJsonPayload()!toString());
             done;
         }
 
@@ -213,18 +213,19 @@ type Flight record {
     int price;
 };
 
-function airlineDBService (string airline, string departureDate, string arrivalDate, string to, string rom) returns (json){
-    // Database endpoint configuration moved inside the function to prevent the error on service startup when wrong 
-    // database credentials are given
-    // Wrong credentials will be given to observe the results of no database connectivity
-    endpoint mysql:Client airLineDB{
+endpoint mysql:Client airLineDB{
     host:"localhost",
     port:3306,
     name:"testdb2",
     username:"root",
     password:"root",
     dbOptions: { useSSL: false }
-    };
+};
+function airlineDBService (string airline, string departureDate, string arrivalDate, string to, string rom) returns (json){
+    // Database endpoint configuration moved inside the function to prevent the error on service startup when wrong 
+    // database credentials are given
+    // Wrong credentials will be given to observe the results of no database connectivity
+    
      log:printDebug("Invoking airlineDBService with parameters - airline : " + airline + ", departureDate : " + departureDate 
     + ", arrivalDate : " + arrivalDate + ", to : " + to + ", from : " + rom);
     // Set arguments for the query

@@ -87,7 +87,7 @@ service<http:Service> carRentalService bind carEP {
             response.statusCode = 400;
             response.setJsonPayload({"Message":"Bad Request - Invalid Payload"});
             _ = caller -> respond(response);
-            log:printWarn("Request with unsufficient info at : " + resourcePath + " : " );
+            log:printWarn("Request with unsufficient info at : " + resourcePath + " : " + check request.getJsonPayload()!toString());
             done;
         }
 
@@ -122,7 +122,7 @@ endpoint mysql:Client carDB{
 };
 
 // Function to do databse calls
-function carDBService (string company, string departureDate, string arrivalDate, string vehicleType) returns (json){
+function carDBService (string company, string departureDate, string arrivalDate, string vehicleType) returns json {
     log:printDebug("Invoking carDBService with parameters - company : " + company + ", departureDate : " + departureDate 
     + ", arrivalDate : " + arrivalDate + ", vehicleType : " + vehicleType);
     // Set arguments for the query

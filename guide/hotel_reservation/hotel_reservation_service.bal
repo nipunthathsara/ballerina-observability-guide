@@ -84,7 +84,7 @@ service<http:Service> hotelReservationService bind hotelEP {
             response.statusCode = 400;
             response.setJsonPayload({"Message":"Bad Request - Invalid Payload"});
             _ = caller -> respond(response);
-            log:printWarn("Request with unsufficient info at : " + resourcePath + " : " );
+            log:printWarn("Request with unsufficient info at : " + resourcePath + " : " + check request.getJsonPayload()!toString());
             done;
         }
 

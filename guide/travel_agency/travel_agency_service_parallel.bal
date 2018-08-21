@@ -105,7 +105,7 @@ service<http:Service> travelAgencyService bind travelAgencyEP {
             outResponse.statusCode = 400;
             outResponse.setJsonPayload({"Message":"Bad Request - Invalid Payload"});
             _ = client -> respond(outResponse);
-            log:printWarn("Request with unsufficient info at : " + resourcePath + " : " );
+            log:printWarn("Request with unsufficient info at : " + resourcePath + " : " + check inRequest.getJsonPayload()!toString());
             done;
         }
 
