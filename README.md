@@ -64,7 +64,7 @@ source resources/mysql.sql;
 
 ### Invoking the service
 
-- Navigate to `parallel-service-orchestration/guide` and run the following commands in separate terminals to start all four HTTP services. This will start the `Airline Reservation`, `Hotel Reservation`, `Car Rental` and `Travel Agency` services in ports 9091, 9092, 9093 and 9090 respectively.
+- Navigate to `ballerina-observability-guide/guide` and run the following commands in separate terminals to start all four HTTP services. This will start the `Airline Reservation`, `Hotel Reservation`, `Car Rental` and `Travel Agency` services in ports 9091, 9092, 9093 and 9090 respectively.
 
 ```bash
    $ ballerina run travel_agency/
@@ -78,7 +78,7 @@ source resources/mysql.sql;
 ```bash
    $ ballerina run -e b7a.observability.metrics.prometheus.port=9799 car_rental/
 ```
-Note that we are overridng the prometheus port by parsing the parameter (`-e b7a.observability.metrics.prometheus.port=xxxx`) for all the services, except the travel_agency service. Travel agency service will publish the metrics data on the port defined in the `ballerina.conf` file (9796). This will avoid any conflicts on port being already occupied.
+Note that we are overridng the prometheus port by passing the parameter (`-e b7a.observability.metrics.prometheus.port=xxxx`) for all the services, except the travel_agency service. Travel agency service will publish the metrics data on the port defined in the `ballerina.conf` file (9796). This will avoid any conflicts on port being already occupied.
 - Invoke the travel agency service by sending a POST request to arrange a tour.
 
 ```bash
@@ -107,7 +107,7 @@ Note that we are overridng the prometheus port by parsing the parameter (`-e b7a
     }
 ```
 ## Observability 
-Ballerina is by default observable. Meaning, you can easily observe your services, resources, etc. Observability configurations are defined in the `ballerina.conf` file. A sample configuration file can be found in `parallel-service-orchestration/guide/` directory.
+Ballerina is by default observable. Meaning, you can easily observe your services, resources, etc. Observability configurations are defined in the `ballerina.conf` file. A sample configuration file can be found in `ballerina-observability-guide/guide/` directory.
 ```ballerina
 [b7a.log]
 level="DEBUG"
@@ -118,7 +118,7 @@ To start the ballerina services using the configuration file, run the following 
 ```
    $ ballerina run --config travel_agency/ballerina.conf <package_name>
 ```
-When you execute the ```ballerina run``` command from the ```parallel-service-orchestration/guide/``` location (where the `ballerina.conf` file is), the configuration file will get applied to every service that you are starting. Therefore, you don't need to pass the `--config` argument explicitly.
+When you execute the ```ballerina run``` command from the ```ballerina-observability-guide/guide/``` location (where the `ballerina.conf` file is), the configuration file will get applied to every service that you are starting. Therefore, you don't need to pass the `--config` argument explicitly.
 
 ### Tracing 
 You can monitor ballerina services using in built tracing capabilities of Ballerina. We'll use [Jaeger](https://github.com/jaegertracing/jaeger) as the distributed tracing system.
@@ -172,7 +172,7 @@ Follow the below steps to set up Prometheus and view metrics Ballerina services.
     port=9796
     host="0.0.0.0"
 ```
-`ballerina.conf` file defines 9796 as the default port on which, ballerina services will publish its metrics information to be consumed by Prometheus. Ballerina will host Travel agency service's metrics on [http://localhost:9796/metrics](http://localhost:9796/metrics) endpoint. For remaining services we define different ports by parsing arguments `-e b7a.observability.metrics.prometheus.port=xxxx`. Prometheus scrapes the given target endpoints within defined interval to extract the metrics information, which will then be visualized via Grafana.
+`ballerina.conf` file defines 9796 as the default port on which, ballerina services will publish its metrics information to be consumed by Prometheus. Ballerina will host Travel agency service's metrics on [http://localhost:9796/metrics](http://localhost:9796/metrics) endpoint. For remaining services we define different ports by passing arguments `-e b7a.observability.metrics.prometheus.port=xxxx`. Prometheus scrapes the given target endpoints within defined interval to extract the metrics information, which will then be visualized via Grafana.
 
 - Create a file `prometheus.yml` inside `/tmp/` location. Add the below configurations to the `prometheus.yml` file.
 ```
@@ -204,19 +204,19 @@ Follow the below steps to set up Prometheus and view metrics Ballerina services.
   		-  http_requests_total
 		-  http_response_time
 
-- Promethues UI with metrics for parallel service orchestration
+- Promethues UI with metrics for Ballerina observability
    
    ![promethues screenshot](images/metrics-screenshot.png "Prometheus UI")
 
 ### Logging
 Ballerina has a log package for logging to the console. You can import ballerina/log package and start logging. The following section will describe how to search, analyze, and visualize logs in real time using Elastic Stack.
 
-- Start the Ballerina Service with the following command from `parallel-service-orchestration/guide`
+- Start the Ballerina Service with the following command from `ballerina-observability-guide/guide`
 ```
    nohup ballerina run travel_agency/ &>> ballerina.log&
 ```
 
-NOTE: This will write the console log to the `ballerina.log` file in the `parallel-service-orchestration/guide` directory
+NOTE: This will write the console log to the `ballerina.log` file in the `ballerina-observability-guide/guide` directory
 
 - Start Elasticsearch using the following command
 ```
@@ -300,7 +300,7 @@ iii) Start the logstash container, replace the {SAMPLE_ROOT_DIRECTORY} with your
 
 NOTE: You may need to add `store` index pattern to kibana visualization tool to create a log visualization.
     
-- Kibana log visualization for parallel service orchestration sample
+- Kibana log visualization for Ballerina observability guide sample
  
      ![logging screenshot](images/logging-screenshot.png "Kibana UI")
      
@@ -406,7 +406,7 @@ You can deploy the services using any of the methods listed below.
 
 ### Deploying locally
 
-- As the first step, you can build Ballerina executable archives (.balx) of the services that we developed above. Navigate to `parallel-service-orchestration/guide` and run the following command. 
+- As the first step, you can build Ballerina executable archives (.balx) of the services that we developed above. Navigate to `ballerina-observability-guide/guide` and run the following command. 
 ```bash
    $ ballerina build <Package_Name>
 ```
@@ -452,7 +452,7 @@ endpoint http:Listener travelAgencyEP {
 service<http:Service> travelAgencyService bind travelAgencyEP {
 ``` 
 
-- Now you can build a Ballerina executable archive (.balx) of the service that we developed above, using the following command. This will also create the corresponding docker image using the docker annotations that you have configured above. Navigate to `parallel-service-orchestration/guide` and run the following command.  
+- Now you can build a Ballerina executable archive (.balx) of the service that we developed above, using the following command. This will also create the corresponding docker image using the docker annotations that you have configured above. Navigate to `ballerina-observability-guide/guide` and run the following command.  
   
 ```
    $ ballerina build travel_agency
