@@ -30,7 +30,7 @@ Consider a real-world use case of a travel agency that arranges complete tours f
 
 Travel Agency service communicates with multiple services. Airline reservation service has multiple resources for three different airlines, whereas Hotel reservation and Car rental services only have a single resource. The travel agency service checks all airline resources in parallel to select the cheapest available. Each associated service then queries their database for the availability and information of their services. Only Hotel resevation service does not have a associated database. Rather the response is hard-coded to demonstrate the difference in traces.
 
-![alt text](/images/parallel-service-orchestration.svg)
+![Ballerina Observability Sample](/images/ballerina-observability-sample.png)
 
 ## Prerequisites
  
