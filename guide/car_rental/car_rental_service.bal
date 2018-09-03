@@ -55,8 +55,12 @@ endpoint http:Listener carEP {
 service<http:Service> carRentalService bind carEP {
 
     // Resource 'driveSg', which checks about hotel 'DriveSg'
-    @http:ResourceConfig {methods:["POST"], path:"/driveSg", consumes:["application/json"],
-        produces:["application/json"]}
+    @http:ResourceConfig {
+        methods:["POST"],
+        path:"/driveSg",
+        consumes:["application/json"],
+        produces:["application/json"]
+    }
     driveSg(endpoint caller, http:Request request) {
         http:Response response;
         json reqPayload;

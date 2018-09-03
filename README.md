@@ -1,4 +1,4 @@
-[![Build Status](https://travis-ci.org/ballerina-guides/parallel-service-orchestration.svg?branch=master)](https://travis-ci.org/ballerina-guides/parallel-service-orchestration)
+[![Build Status](https://travis-ci.org/ballerina-guides/ballerina-observability-guide.svg?branch=master)](https://travis-ci.org/ballerina-guides/ballerina-observability-guide)
 
 # Observing Ballerina Services
 

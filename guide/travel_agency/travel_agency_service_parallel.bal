@@ -70,7 +70,11 @@ endpoint http:Client carRentalEP {
 service<http:Service> travelAgencyService bind travelAgencyEP {
 
     // Resource to arrange a tour
-    @http:ResourceConfig {methods:["POST"], consumes:["application/json"], produces:["application/json"]}
+    @http:ResourceConfig {
+        methods:["POST"],
+        consumes:["application/json"],
+        produces:["application/json"]
+    }
     arrangeTour (endpoint client, http:Request inRequest) {
         http:Response outResponse;
         json inReqPayload;

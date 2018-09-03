@@ -53,8 +53,12 @@ endpoint http:Listener hotelEP {
 service<http:Service> hotelReservationService bind hotelEP {
 
     // Resource 'elizabeth', which checks about hotel 'Elizabeth'
-    @http:ResourceConfig {methods:["POST"], path:"/elizabeth", consumes:["application/json"],
-        produces:["application/json"]}
+    @http:ResourceConfig {
+        methods:["POST"],
+        path:"/elizabeth",
+        consumes:["application/json"],
+        produces:["application/json"]
+    }
     elizabeth (endpoint caller, http:Request request) {
         http:Response response;
         json reqPayload;
